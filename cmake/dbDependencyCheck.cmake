@@ -63,15 +63,28 @@ function(_cppbessot_require_npx_package_executable npx_executable package_execut
   #   - No return value; raises FATAL_ERROR if execution fails.
   execute_process(
     COMMAND "${npx_executable}" --no-install "${package_executable}" --help
-    RESULT_VARIABLE _exec_result
+    RESULT_VARIABLE _help_result
     OUTPUT_QUIET
-    ERROR_VARIABLE _exec_stderr
+    ERROR_VARIABLE _help_stderr
   )
-  if(NOT _exec_result EQUAL 0)
+
+  if(_help_result EQUAL 0)
+    return()
+  endif()
+
+  # Some CLIs return non-zero for --help; verify with version as fallback.
+  execute_process(
+    COMMAND "${npx_executable}" --no-install "${package_executable}" version
+    RESULT_VARIABLE _version_result
+    OUTPUT_QUIET
+    ERROR_VARIABLE _version_stderr
+  )
+
+  if(NOT _version_result EQUAL 0)
     message(FATAL_ERROR
       "${package_executable} is not available through npx. "
       "Ensure the supplying package is installed locally or globally. "
-      "Underlying error: ${_exec_stderr}")
+      "Help check error: ${_help_stderr}\nVersion check error: ${_version_stderr}")
   endif()
 endfunction()
 
@@ -97,6 +110,9 @@ function(cppbessot_check_dependencies)
     "Install a Java runtime (OpenAPI generator uses Java).")
   _cppbessot_require_program(CPPBESSOT_GIT_EXECUTABLE git
     "Install Git and ensure it is available in PATH.")
+
+  _cppbessot_require_npm_package("${CPPBESSOT_NPM_EXECUTABLE}" "@openapitools/openapi-generator-cli")
+  _cppbessot_require_npx_package_executable("${CPPBESSOT_NPX_EXECUTABLE}" "@openapitools/openapi-generator-cli")
 
   _cppbessot_require_npm_package("${CPPBESSOT_NPM_EXECUTABLE}" "openapi-zod-client")
   _cppbessot_require_npx_package_executable("${CPPBESSOT_NPX_EXECUTABLE}" "openapi-zod-client")

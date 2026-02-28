@@ -20,7 +20,7 @@ function(cppbessot_add_db_gen_zod_target version)
   add_custom_target(db_gen_zod
     COMMAND ${CMAKE_COMMAND} -E make_directory "${_output_dir}"
     COMMAND "${CPPBESSOT_NPX_EXECUTABLE}" --no-install openapi-zod-client
-            --input "${_openapi_file}"
+            "${_openapi_file}"
             --output "${_output_file}"
             --export-schemas
     COMMENT "Generating Zod schemas for ${version}"
