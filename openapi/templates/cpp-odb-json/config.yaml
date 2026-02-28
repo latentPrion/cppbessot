@@ -1,0 +1,9 @@
+modelPackage: models
+apiPackage: api
+packageName: cppbessot
+hideGenerationTimestamp: true
+generateModelTests: false
+generateApiTests: false
+generateApiDocumentation: false
+generateModelDocumentation: false
+variableNameFirstCharacterUppercase: false

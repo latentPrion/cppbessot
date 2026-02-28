@@ -1,0 +1,59 @@
+{{#models}}
+{{#model}}
+#pragma once
+
+#include <cstdint>
+#include <string>
+
+#include <nlohmann/json.hpp>
+#include <odb/core.hxx>
+
+namespace models {
+
+{{#isEnum}}
+enum class {{classname}}
+{
+{{#allowableValues}}
+{{#enumVars}}
+  {{name}}{{^-last}},{{/-last}}
+{{/enumVars}}
+{{/allowableValues}}
+};
+{{/isEnum}}
+{{^isEnum}}
+#pragma db model version({{#vendorExtensions.x-odbModelVersion}}{{.}}{{/vendorExtensions.x-odbModelVersion}}{{^vendorExtensions.x-odbModelVersion}}1, 1{{/vendorExtensions.x-odbModelVersion}})
+#pragma db object table("{{#vendorExtensions.x-odbTable}}{{.}}{{/vendorExtensions.x-odbTable}}{{^vendorExtensions.x-odbTable}}{{classname}}{{/vendorExtensions.x-odbTable}}")
+class {{classname}}
+{
+public:
+{{#vars}}
+{{#vendorExtensions.x-odbId}}
+  #pragma db id
+{{/vendorExtensions.x-odbId}}
+{{#description}}
+  // {{description}}
+{{/description}}
+{{#vendorExtensions.x-odbAddedIn}}
+  // odbAddedIn: {{.}}
+{{/vendorExtensions.x-odbAddedIn}}
+  {{#isString}}std::string{{/isString}}{{^isString}}{{#isDateTime}}std::string{{/isDateTime}}{{^isDateTime}}{{dataType}}{{/isDateTime}}{{/isString}} {{nameInCamelCase}}{};
+{{/vars}}
+
+  NLOHMANN_DEFINE_TYPE_INTRUSIVE({{classname}}{{#vars}}, {{nameInCamelCase}}{{/vars}})
+
+  nlohmann::json toJson() const
+  {
+    return nlohmann::json(*this);
+  }
+
+  static {{classname}} fromJson(const nlohmann::json& j)
+  {
+    return j.get<{{classname}}>();
+  }
+};
+{{/isEnum}}
+
+} // namespace models
+
+{{/model}}
+{{/models}}
