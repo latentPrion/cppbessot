@@ -15,8 +15,8 @@ function(cppbessot_add_db_gen_sql_ddl_target version)
 
   add_custom_target(db_gen_sql_ddl
     COMMAND "${CMAKE_COMMAND}"
-            -DCPPBESSOT_ODB_EXECUTABLE="${CPPBESSOT_ODB_EXECUTABLE}"
-            -DCPPBESSOT_VERSION_DIR="${_version_dir}"
+            -DCPPBESSOT_ODB_EXECUTABLE=${CPPBESSOT_ODB_EXECUTABLE}
+            -DCPPBESSOT_VERSION_DIR=${_version_dir}
             -P "${CMAKE_CURRENT_LIST_DIR}/scripts/run_odb_sql_ddl.cmake"
     DEPENDS db_gen_cpp_headers
     COMMENT "Generating SQL DDL snapshots for ${version} (sqlite + postgre)"

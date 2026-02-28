@@ -25,10 +25,10 @@ function(cppbessot_add_db_gen_migrations_target from_version to_version)
 
   add_custom_target(db_gen_migrations
     COMMAND "${CMAKE_COMMAND}"
-            -DCPPBESSOT_ODB_EXECUTABLE="${CPPBESSOT_ODB_EXECUTABLE}"
-            -DCPPBESSOT_FROM_VERSION_DIR="${_from_dir}"
-            -DCPPBESSOT_TO_VERSION_DIR="${_to_dir}"
-            -DCPPBESSOT_MIGRATION_DIR="${_migration_dir}"
+            -DCPPBESSOT_ODB_EXECUTABLE=${CPPBESSOT_ODB_EXECUTABLE}
+            -DCPPBESSOT_FROM_VERSION_DIR=${_from_dir}
+            -DCPPBESSOT_TO_VERSION_DIR=${_to_dir}
+            -DCPPBESSOT_MIGRATION_DIR=${_migration_dir}
             -P "${CMAKE_CURRENT_LIST_DIR}/scripts/run_odb_migrations.cmake"
     COMMENT "Generating DB migrations: ${from_version} -> ${to_version}"
     VERBATIM
