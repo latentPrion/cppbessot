@@ -4,6 +4,8 @@ if(NOT DEFINED CPPBESSOT_WORKDIR)
   set(CPPBESSOT_WORKDIR "db" CACHE STRING "CppBeSSOT schema root folder, relative to PROJECT_SOURCE_DIR or absolute path")
 endif()
 
+set(_CPPBESSOT_GENERATION_COMMON_DIR "${CMAKE_CURRENT_LIST_DIR}")
+
 function(cppbessot_abs_path out_var input_path)
   # Purpose: Resolve a path to an absolute path anchored at PROJECT_SOURCE_DIR
   #          when the input is relative.
@@ -30,8 +32,8 @@ function(cppbessot_initialize_paths)
   #   - CPPBESSOT_CMAKE_DIR (PARENT_SCOPE): Absolute module directory path.
   #   - CPPBESSOT_MODULE_ROOT (PARENT_SCOPE): Module root directory path.
   #   - CPPBESSOT_WORKDIR_ABS (PARENT_SCOPE): Absolute schema root path.
-  get_filename_component(CPPBESSOT_CMAKE_DIR "${CMAKE_CURRENT_LIST_DIR}" ABSOLUTE)
-  get_filename_component(CPPBESSOT_MODULE_ROOT "${CPPBESSOT_CMAKE_DIR}/../.." ABSOLUTE)
+  get_filename_component(CPPBESSOT_CMAKE_DIR "${_CPPBESSOT_GENERATION_COMMON_DIR}" ABSOLUTE)
+  get_filename_component(CPPBESSOT_MODULE_ROOT "${CPPBESSOT_CMAKE_DIR}/.." ABSOLUTE)
   cppbessot_abs_path(CPPBESSOT_WORKDIR_ABS "${CPPBESSOT_WORKDIR}")
 
   set(CPPBESSOT_CMAKE_DIR "${CPPBESSOT_CMAKE_DIR}" PARENT_SCOPE)

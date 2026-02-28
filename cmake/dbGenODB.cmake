@@ -1,6 +1,7 @@
 include_guard(GLOBAL)
 
 include("${CMAKE_CURRENT_LIST_DIR}/dbGenerationCommon.cmake")
+set(_CPPBESSOT_DB_GEN_ODB_DIR "${CMAKE_CURRENT_LIST_DIR}")
 
 function(cppbessot_add_db_gen_odb_target version)
   # Purpose: Register ODB ORM generation target for sqlite and postgre backends.
@@ -17,7 +18,7 @@ function(cppbessot_add_db_gen_odb_target version)
     COMMAND "${CMAKE_COMMAND}"
             -DCPPBESSOT_ODB_EXECUTABLE=${CPPBESSOT_ODB_EXECUTABLE}
             -DCPPBESSOT_VERSION_DIR=${_version_dir}
-            -P "${CMAKE_CURRENT_LIST_DIR}/scripts/run_odb_logic.cmake"
+            -P "${_CPPBESSOT_DB_GEN_ODB_DIR}/scripts/run_odb_logic.cmake"
     DEPENDS db_gen_cpp_headers
     COMMENT "Generating ODB ORM sources for ${version} (sqlite + postgre)"
     VERBATIM

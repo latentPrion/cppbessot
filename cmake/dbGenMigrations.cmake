@@ -1,6 +1,7 @@
 include_guard(GLOBAL)
 
 include("${CMAKE_CURRENT_LIST_DIR}/dbGenerationCommon.cmake")
+set(_CPPBESSOT_DB_GEN_MIGRATIONS_DIR "${CMAKE_CURRENT_LIST_DIR}")
 
 function(cppbessot_add_db_gen_migrations_target from_version to_version)
   # Purpose: Register migration SQL generation between two schema versions.
@@ -29,7 +30,7 @@ function(cppbessot_add_db_gen_migrations_target from_version to_version)
             -DCPPBESSOT_FROM_VERSION_DIR=${_from_dir}
             -DCPPBESSOT_TO_VERSION_DIR=${_to_dir}
             -DCPPBESSOT_MIGRATION_DIR=${_migration_dir}
-            -P "${CMAKE_CURRENT_LIST_DIR}/scripts/run_odb_migrations.cmake"
+            -P "${_CPPBESSOT_DB_GEN_MIGRATIONS_DIR}/scripts/run_odb_migrations.cmake"
     COMMENT "Generating DB migrations: ${from_version} -> ${to_version}"
     VERBATIM
   )

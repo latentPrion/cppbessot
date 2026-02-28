@@ -1,6 +1,7 @@
 include_guard(GLOBAL)
 
 include("${CMAKE_CURRENT_LIST_DIR}/dbGenerationCommon.cmake")
+set(_CPPBESSOT_DB_SCHEMA_CHECK_DIR "${CMAKE_CURRENT_LIST_DIR}")
 
 function(cppbessot_add_db_check_schema_changes_target)
   # Purpose: Register a manual target that reports git-tracked schema changes.
@@ -17,7 +18,7 @@ function(cppbessot_add_db_check_schema_changes_target)
             -DCPPBESSOT_GIT_EXECUTABLE=${CPPBESSOT_GIT_EXECUTABLE}
             -DCPPBESSOT_WORKDIR_ABS=${_workdir}
             -DCPPBESSOT_PROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}
-            -P "${CMAKE_CURRENT_LIST_DIR}/scripts/check_schema_changes.cmake"
+            -P "${_CPPBESSOT_DB_SCHEMA_CHECK_DIR}/scripts/check_schema_changes.cmake"
     COMMENT "Checking for schema changes under ${CPPBESSOT_WORKDIR}"
     VERBATIM
   )
