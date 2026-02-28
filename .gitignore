@@ -1,0 +1,3 @@
+# Ignore any directory named `db` or `build` anywhere in this repository.
+**/db/
+**/build/
