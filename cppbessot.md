@@ -69,7 +69,7 @@ All CMake files are located in the submodule directory. The entry point is `CppB
 * **Sub-targets** (One for each `generated-*` folder):
 1. `db_gen_ts`: `openapi-generator-cli` -> TS types.
 2. `db_gen_zod`: `openapi-zod-client --export-schemas` -> Zod schemas.
-3. `db_gen_cpp_headers`: `openapi-generator-cli` + Mustache templates -> C++ headers with ODB `#pragma` and JSON macros. Do not run in models-only mode; generate supporting files too (for example `ModelBase.h` and related runtime support headers/sources required by generated models).
+3. `db_gen_cpp_headers`: `openapi-generator-cli` + Mustache templates -> C++ headers with ODB `#pragma` and JSON macros. Use **models-only** mode (`--global-property models`): with nlohmann/json the generated model headers are self-contained (no `ModelBase.h` or cpp-restsdk support files needed).
 4. `db_gen_odb_logic`: `odb` compiler (with `--changelog-dir` to the same backend subdir under generated-odb-source) -> generated-odb-source.
 5. `db_gen_sql_ddl`: `odb --generate-schema --schema-format sql` with `--changelog-dir` pointing at the corresponding generated-odb-source backend subdir -> generated-sql-ddl (sqlite/postgre DDL snapshots); changelog XML remains in generated-odb-source.
 
@@ -146,8 +146,8 @@ Run all commands from the project repository root. Prerequisites: `npx`, `odb` c
 ### v1.1 — from OpenAPI through SQL DDL
 
 ```bash
-# 1. C++ model headers
-npx @openapitools/openapi-generator-cli generate -i db/v1.1/openapi/openapi.yaml -g cpp-restsdk -t db/v1.1/openapi/templates/cpp-odb-json -c db/v1.1/openapi/templates/cpp-odb-json/config.yaml -o db/v1.1/generated-cpp-source
+# 1. C++ model headers (models-only: no CMake/ModelBase; nlohmann makes headers self-contained)
+npx @openapitools/openapi-generator-cli generate -i db/v1.1/openapi/openapi.yaml -g cpp-restsdk -t db/v1.1/openapi/templates/cpp-odb-json -c db/v1.1/openapi/templates/cpp-odb-json/config.yaml -o db/v1.1/generated-cpp-source --global-property models
 
 # 2. Create ODB and DDL output dirs
 mkdir -p db/v1.1/generated-odb-source/sqlite db/v1.1/generated-odb-source/postgre \
@@ -175,8 +175,8 @@ odb -I db/v1.1/generated-cpp-source/include --std c++11 -d pgsql --generate-sche
 ### v1.2 — from OpenAPI through SQL DDL
 
 ```bash
-# 1. C++ model headers
-npx @openapitools/openapi-generator-cli generate -i db/v1.2/openapi/openapi.yaml -g cpp-restsdk -t db/v1.2/openapi/templates/cpp-odb-json -c db/v1.2/openapi/templates/cpp-odb-json/config.yaml -o db/v1.2/generated-cpp-source
+# 1. C++ model headers (models-only)
+npx @openapitools/openapi-generator-cli generate -i db/v1.2/openapi/openapi.yaml -g cpp-restsdk -t db/v1.2/openapi/templates/cpp-odb-json -c db/v1.2/openapi/templates/cpp-odb-json/config.yaml -o db/v1.2/generated-cpp-source --global-property models
 
 # 2. Create ODB and DDL output dirs
 mkdir -p db/v1.2/generated-odb-source/sqlite db/v1.2/generated-odb-source/postgre \
