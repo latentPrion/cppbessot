@@ -16,6 +16,7 @@ function(cppbessot_add_db_gen_zod_target version)
   set(_openapi_file "${_version_dir}/openapi/openapi.yaml")
   set(_output_dir "${_version_dir}/generated-zod")
   set(_output_file "${_output_dir}/schemas.ts")
+  set(_prepend_notice_script "${CMAKE_CURRENT_LIST_DIR}/scripts/prepend_cppbessot_notice.cmake")
 
   add_custom_target(db_gen_zod
     COMMAND ${CMAKE_COMMAND} -E make_directory "${_output_dir}"
@@ -23,6 +24,9 @@ function(cppbessot_add_db_gen_zod_target version)
             "${_openapi_file}"
             --output "${_output_file}"
             --export-schemas
+    COMMAND ${CMAKE_COMMAND}
+            -DCPPBESSOT_TARGET_FILE="${_output_file}"
+            -P "${_prepend_notice_script}"
     COMMENT "Generating Zod schemas for ${version}"
     VERBATIM
   )
