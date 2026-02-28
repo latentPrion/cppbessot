@@ -28,7 +28,7 @@ The following summary is designed to be pasted into **Cursor's** composer or cha
 ```text
 ${CPPBESSOT_WORKDIR}/
 ├── v<N>/                       # Immutable version snapshots
-│   ├── openapi/                # Source YAMLs + Mustache templates
+│   ├── openapi/                # Source YAMLs
 │   ├── generated-ts-types/     # Output: TS interfaces
 │   ├── generated-zod/          # Output: Zod TS schemas
 │   ├── generated-cpp-source/   # Output: C++ Headers (with ODB & JSON macros)
@@ -104,7 +104,7 @@ All CMake files are located in the submodule directory. The entry point is `CppB
    - Use `UpperCamelCase` for class/schema names.
    - Do not use underscores in class names or property names.
 7. **No Version in C++ Namespace**: Generated C++ model namespaces must not encode schema version names. The wider project should not need version-coupled source code identifiers; schema version selection should be done via include path selection (for example, `include_directories` pointing at the desired generated version).
-8. **Template Bootstrap Input**: Use the current checked-in Mustache templates under `${CPPBESSOT_WORKDIR}/v<N>/openapi/templates/` as initial test inputs when bringing up generation and CMake flows. Treat these templates as the baseline that should work first before further refactoring.
+8. **Template Bootstrap Input**: Use the current checked-in Mustache templates under `${CPPBESSOT_MODULE_ROOT}/openapi/templates/` as initial test inputs when bringing up generation and CMake flows. Treat these templates as the baseline that should work first before further refactoring.
 
 ### Minimum annotations for ODB migration diffing
 
@@ -147,7 +147,7 @@ Run all commands from the project repository root. Prerequisites: `npx`, `odb` c
 
 ```bash
 # 1. C++ model headers (models-only: no CMake/ModelBase; nlohmann makes headers self-contained)
-npx @openapitools/openapi-generator-cli generate -i db/v1.1/openapi/openapi.yaml -g cpp-restsdk -t db/v1.1/openapi/templates/cpp-odb-json -c db/v1.1/openapi/templates/cpp-odb-json/config.yaml -o db/v1.1/generated-cpp-source --global-property models
+npx @openapitools/openapi-generator-cli generate -i db/v1.1/openapi/openapi.yaml -g cpp-restsdk -t openapi/templates/cpp-odb-json -c openapi/templates/cpp-odb-json/config.yaml -o db/v1.1/generated-cpp-source --global-property models
 
 # 2. Create ODB and DDL output dirs
 mkdir -p db/v1.1/generated-odb-source/sqlite db/v1.1/generated-odb-source/postgre \
@@ -156,27 +156,27 @@ mkdir -p db/v1.1/generated-odb-source/sqlite db/v1.1/generated-odb-source/postgr
 # 3. ODB ORM (changelog goes to generated-odb-source/<backend>)
 odb -I db/v1.1/generated-cpp-source/include --std c++11 -d sqlite -q \
   -o db/v1.1/generated-odb-source/sqlite --changelog-dir db/v1.1/generated-odb-source/sqlite \
-  db/v1.1/generated-cpp-source/include/cppbessot_v1_1/model/Agent.h db/v1.1/generated-cpp-source/include/cppbessot_v1_1/model/DeliveryRequest.h
+  db/v1.1/generated-cpp-source/include/*/model/Agent.h db/v1.1/generated-cpp-source/include/*/model/DeliveryRequest.h
 
 odb -I db/v1.1/generated-cpp-source/include --std c++11 -d pgsql -q \
   -o db/v1.1/generated-odb-source/postgre --changelog-dir db/v1.1/generated-odb-source/postgre \
-  db/v1.1/generated-cpp-source/include/cppbessot_v1_1/model/Agent.h db/v1.1/generated-cpp-source/include/cppbessot_v1_1/model/DeliveryRequest.h
+  db/v1.1/generated-cpp-source/include/*/model/Agent.h db/v1.1/generated-cpp-source/include/*/model/DeliveryRequest.h
 
 # 4. SQL DDL
 odb -I db/v1.1/generated-cpp-source/include --std c++11 -d sqlite --generate-schema --schema-format sql -q \
   -o db/v1.1/generated-sql-ddl/sqlite --changelog-dir db/v1.1/generated-odb-source/sqlite \
-  db/v1.1/generated-cpp-source/include/cppbessot_v1_1/model/Agent.h db/v1.1/generated-cpp-source/include/cppbessot_v1_1/model/DeliveryRequest.h
+  db/v1.1/generated-cpp-source/include/*/model/Agent.h db/v1.1/generated-cpp-source/include/*/model/DeliveryRequest.h
 
 odb -I db/v1.1/generated-cpp-source/include --std c++11 -d pgsql --generate-schema --schema-format sql -q \
   -o db/v1.1/generated-sql-ddl/postgre --changelog-dir db/v1.1/generated-odb-source/postgre \
-  db/v1.1/generated-cpp-source/include/cppbessot_v1_1/model/Agent.h db/v1.1/generated-cpp-source/include/cppbessot_v1_1/model/DeliveryRequest.h
+  db/v1.1/generated-cpp-source/include/*/model/Agent.h db/v1.1/generated-cpp-source/include/*/model/DeliveryRequest.h
 ```
 
 ### v1.2 — from OpenAPI through SQL DDL
 
 ```bash
 # 1. C++ model headers (models-only)
-npx @openapitools/openapi-generator-cli generate -i db/v1.2/openapi/openapi.yaml -g cpp-restsdk -t db/v1.2/openapi/templates/cpp-odb-json -c db/v1.2/openapi/templates/cpp-odb-json/config.yaml -o db/v1.2/generated-cpp-source --global-property models
+npx @openapitools/openapi-generator-cli generate -i db/v1.2/openapi/openapi.yaml -g cpp-restsdk -t openapi/templates/cpp-odb-json -c openapi/templates/cpp-odb-json/config.yaml -o db/v1.2/generated-cpp-source --global-property models
 
 # 2. Create ODB and DDL output dirs
 mkdir -p db/v1.2/generated-odb-source/sqlite db/v1.2/generated-odb-source/postgre \
@@ -185,20 +185,20 @@ mkdir -p db/v1.2/generated-odb-source/sqlite db/v1.2/generated-odb-source/postgr
 # 3. ODB ORM
 odb -I db/v1.2/generated-cpp-source/include --std c++11 -d sqlite -q \
   -o db/v1.2/generated-odb-source/sqlite --changelog-dir db/v1.2/generated-odb-source/sqlite \
-  db/v1.2/generated-cpp-source/include/cppbessot_v1_2/model/Agent.h db/v1.2/generated-cpp-source/include/cppbessot_v1_2/model/DeliveryRequest.h
+  db/v1.2/generated-cpp-source/include/*/model/Agent.h db/v1.2/generated-cpp-source/include/*/model/DeliveryRequest.h
 
 odb -I db/v1.2/generated-cpp-source/include --std c++11 -d pgsql -q \
   -o db/v1.2/generated-odb-source/postgre --changelog-dir db/v1.2/generated-odb-source/postgre \
-  db/v1.2/generated-cpp-source/include/cppbessot_v1_2/model/Agent.h db/v1.2/generated-cpp-source/include/cppbessot_v1_2/model/DeliveryRequest.h
+  db/v1.2/generated-cpp-source/include/*/model/Agent.h db/v1.2/generated-cpp-source/include/*/model/DeliveryRequest.h
 
 # 4. SQL DDL
 odb -I db/v1.2/generated-cpp-source/include --std c++11 -d sqlite --generate-schema --schema-format sql -q \
   -o db/v1.2/generated-sql-ddl/sqlite --changelog-dir db/v1.2/generated-odb-source/sqlite \
-  db/v1.2/generated-cpp-source/include/cppbessot_v1_2/model/Agent.h db/v1.2/generated-cpp-source/include/cppbessot_v1_2/model/DeliveryRequest.h
+  db/v1.2/generated-cpp-source/include/*/model/Agent.h db/v1.2/generated-cpp-source/include/*/model/DeliveryRequest.h
 
 odb -I db/v1.2/generated-cpp-source/include --std c++11 -d pgsql --generate-schema --schema-format sql -q \
   -o db/v1.2/generated-sql-ddl/postgre --changelog-dir db/v1.2/generated-odb-source/postgre \
-  db/v1.2/generated-cpp-source/include/cppbessot_v1_2/model/Agent.h db/v1.2/generated-cpp-source/include/cppbessot_v1_2/model/DeliveryRequest.h
+  db/v1.2/generated-cpp-source/include/*/model/Agent.h db/v1.2/generated-cpp-source/include/*/model/DeliveryRequest.h
 ```
 
 ### Migration v1.1 → v1.2
@@ -213,26 +213,26 @@ odb -I db/v1.2/generated-cpp-source/include --std c++11 -d sqlite --generate-sch
   -o db/migrations/v1.1-v1.2/sqlite \
   --changelog-in db/v1.1/generated-odb-source/sqlite/Agent.xml \
   --changelog-out db/v1.2/generated-odb-source/sqlite/Agent.xml \
-  db/v1.2/generated-cpp-source/include/cppbessot_v1_2/model/Agent.h
+  db/v1.2/generated-cpp-source/include/*/model/Agent.h
 
 odb -I db/v1.2/generated-cpp-source/include --std c++11 -d sqlite --generate-schema --schema-format sql -q \
   -o db/migrations/v1.1-v1.2/sqlite \
   --changelog-in db/v1.1/generated-odb-source/sqlite/DeliveryRequest.xml \
   --changelog-out db/v1.2/generated-odb-source/sqlite/DeliveryRequest.xml \
-  db/v1.2/generated-cpp-source/include/cppbessot_v1_2/model/DeliveryRequest.h
+  db/v1.2/generated-cpp-source/include/*/model/DeliveryRequest.h
 
 # PostgreSQL
 odb -I db/v1.2/generated-cpp-source/include --std c++11 -d pgsql --generate-schema --schema-format sql -q \
   -o db/migrations/v1.1-v1.2/postgre \
   --changelog-in db/v1.1/generated-odb-source/postgre/Agent.xml \
   --changelog-out db/v1.2/generated-odb-source/postgre/Agent.xml \
-  db/v1.2/generated-cpp-source/include/cppbessot_v1_2/model/Agent.h
+  db/v1.2/generated-cpp-source/include/*/model/Agent.h
 
 odb -I db/v1.2/generated-cpp-source/include --std c++11 -d pgsql --generate-schema --schema-format sql -q \
   -o db/migrations/v1.1-v1.2/postgre \
   --changelog-in db/v1.1/generated-odb-source/postgre/DeliveryRequest.xml \
   --changelog-out db/v1.2/generated-odb-source/postgre/DeliveryRequest.xml \
-  db/v1.2/generated-cpp-source/include/cppbessot_v1_2/model/DeliveryRequest.h
+  db/v1.2/generated-cpp-source/include/*/model/DeliveryRequest.h
 ```
 
 ---
