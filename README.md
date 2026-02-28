@@ -10,7 +10,7 @@ It works by specifying the data model in OpenAPI. Then the OpenAPI model is tran
 
 Reusable CMake entry point for embedding in a larger project:
 
-- `cmake/cppbessot/CppBeSSOT.cmake`
+- `cmake/CppBeSSOT.cmake`
 
 The primary schema root folder is configurable via:
 
@@ -35,7 +35,7 @@ set(DB_SCHEMA_VERSION_TO_GENERATE "v1.1")
 # set(DB_SCHEMA_MIGRATION_VERSION_FROM "v1.1")
 # set(DB_SCHEMA_MIGRATION_VERSION_TO "v1.2")
 
-include(path/to/cppbessot/cmake/cppbessot/CppBeSSOT.cmake)
+include(path/to/cppbessot/cmake/CppBeSSOT.cmake)
 ```
 
 ### 2) Build generation targets manually
@@ -70,6 +70,6 @@ target_link_libraries(my_app PRIVATE
 
 ```cmake
 set(CPPBESSOT_AUTO_ENABLE OFF)
-include(path/to/cppbessot/cmake/cppbessot/CppBeSSOT.cmake)
+include(path/to/cppbessot/cmake/CppBeSSOT.cmake)
 cppbessot_enable()
 ```
