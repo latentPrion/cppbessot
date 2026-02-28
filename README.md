@@ -5,3 +5,13 @@ A framework that uses OpenAI to maintain a single source of truth for the data m
 Basically, it enables one to write a web application whose backend is written in C++. This C++ web application can communicate seamlessly with a Typescript frontend without losing type-safety. We leverage Zod to enforce type safety. So you get type-safety from end to end. From C++ through to the Typescript frontend.
 
 It works by specifying the data model in OpenAPI. Then the OpenAPI model is transpiled into both C++ headers (with JSON serdes and ODB ORM for your database of choice) and Typescript types with Zod schema descriptions.
+
+## CMake integration
+
+Reusable CMake entry point for embedding in a larger project:
+
+- `cmake/cppbessot/CppBeSSOT.cmake`
+
+The primary schema root folder is configurable via:
+
+- `CPPBESSOT_WORKDIR` (defaults to `db`)
