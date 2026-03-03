@@ -1,0 +1,21 @@
+<changelog xmlns="http://www.codesynthesis.com/xmlns/odb/changelog" database="sqlite" version="1">
+  <model version="1">
+    <table name="TripAttemptResult" kind="object">
+      <column name="id" type="TEXT" null="false"/>
+      <column name="result" type="TEXT" null="false"/>
+      <column name="retryReason" type="TEXT" null="false"/>
+      <column name="governmentSuspensionReason" type="TEXT" null="false"/>
+      <column name="governmentTerminationReason" type="TEXT" null="false"/>
+      <column name="complianceSuspensionReason" type="TEXT" null="false"/>
+      <column name="complianceTerminationReason" type="TEXT" null="false"/>
+      <column name="policySuspensionReason" type="TEXT" null="false"/>
+      <column name="policyTerminationReason" type="TEXT" null="false"/>
+      <column name="cancelationReason" type="TEXT" null="false"/>
+      <column name="failureReason" type="TEXT" null="false"/>
+      <column name="details" type="TEXT" null="false"/>
+      <primary-key>
+        <column name="id"/>
+      </primary-key>
+    </table>
+  </model>
+</changelog>

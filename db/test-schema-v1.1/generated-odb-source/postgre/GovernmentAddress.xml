@@ -1,0 +1,12 @@
+<changelog xmlns="http://www.codesynthesis.com/xmlns/odb/changelog" database="pgsql" version="1">
+  <model version="1">
+    <table name="GovernmentAddress" kind="object">
+      <column name="id" type="TEXT" null="false"/>
+      <column name="addressLabel" type="TEXT" null="false"/>
+      <column name="regionLookupKey" type="TEXT" null="false"/>
+      <primary-key>
+        <column name="id"/>
+      </primary-key>
+    </table>
+  </model>
+</changelog>
