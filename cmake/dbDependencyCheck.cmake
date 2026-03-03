@@ -2,6 +2,7 @@ include_guard(GLOBAL)
 
 include("${CMAKE_CURRENT_LIST_DIR}/dbGenerationCommon.cmake")
 include(CheckIncludeFileCXX)
+include(CMakePushCheckState)
 
 function(_cppbessot_require_program var_name program_name hint)
   # Purpose: Locate an executable and fail with a clear install hint if missing.
@@ -126,10 +127,63 @@ function(cppbessot_check_dependencies)
     endif()
   endif()
 
+  find_library(CPPBESSOT_ODB_RUNTIME_LIB NAMES odb libodb)
+  if(NOT CPPBESSOT_ODB_RUNTIME_LIB)
+    message(FATAL_ERROR
+      "ODB runtime library was not found. On Ubuntu/Debian install package `libodb-dev`.")
+  endif()
+
+  find_library(CPPBESSOT_ODB_SQLITE_RUNTIME_LIB NAMES odb-sqlite libodb-sqlite)
+  if(NOT CPPBESSOT_ODB_SQLITE_RUNTIME_LIB)
+    message(FATAL_ERROR
+      "ODB SQLite runtime library was not found. On Ubuntu/Debian install package `libodb-sqlite-dev`.")
+  endif()
+
+  find_library(CPPBESSOT_ODB_PGSQL_RUNTIME_LIB NAMES odb-pgsql libodb-pgsql)
+  if(NOT CPPBESSOT_ODB_PGSQL_RUNTIME_LIB)
+    message(FATAL_ERROR
+      "ODB PostgreSQL runtime library was not found. On Ubuntu/Debian install package `libodb-pgsql-dev`.")
+  endif()
+
+  find_path(CPPBESSOT_SQLITE_INCLUDE_DIR sqlite3.h)
+  if(NOT CPPBESSOT_SQLITE_INCLUDE_DIR)
+    message(FATAL_ERROR
+      "SQLite development headers were not found. On Ubuntu/Debian install package `libsqlite3-dev`.")
+  endif()
+
+  find_path(CPPBESSOT_PGSQL_INCLUDE_DIR libpq-fe.h PATH_SUFFIXES postgresql)
+  if(NOT CPPBESSOT_PGSQL_INCLUDE_DIR)
+    message(FATAL_ERROR
+      "PostgreSQL client development headers were not found. On Ubuntu/Debian install package `libpq-dev`.")
+  endif()
+
+  cmake_push_check_state(RESET)
+  set(CMAKE_REQUIRED_INCLUDES "${CPPBESSOT_SQLITE_INCLUDE_DIR}")
+  check_include_file_cxx("sqlite3.h" CPPBESSOT_HAS_SQLITE3_HEADER)
+  cmake_pop_check_state()
+  if(NOT CPPBESSOT_HAS_SQLITE3_HEADER)
+    message(FATAL_ERROR
+      "SQLite development headers are not usable. Expected to compile with include path `${CPPBESSOT_SQLITE_INCLUDE_DIR}`.")
+  endif()
+
+  cmake_push_check_state(RESET)
+  set(CMAKE_REQUIRED_INCLUDES "${CPPBESSOT_PGSQL_INCLUDE_DIR}")
+  check_include_file_cxx("libpq-fe.h" CPPBESSOT_HAS_LIBPQ_HEADER)
+  cmake_pop_check_state()
+  if(NOT CPPBESSOT_HAS_LIBPQ_HEADER)
+    message(FATAL_ERROR
+      "PostgreSQL development headers are not usable. Expected to compile with include path `${CPPBESSOT_PGSQL_INCLUDE_DIR}`.")
+  endif()
+
   set(CPPBESSOT_ODB_EXECUTABLE "${CPPBESSOT_ODB_EXECUTABLE}" PARENT_SCOPE)
   set(CPPBESSOT_NPX_EXECUTABLE "${CPPBESSOT_NPX_EXECUTABLE}" PARENT_SCOPE)
   set(CPPBESSOT_NPM_EXECUTABLE "${CPPBESSOT_NPM_EXECUTABLE}" PARENT_SCOPE)
   set(CPPBESSOT_JAVA_EXECUTABLE "${CPPBESSOT_JAVA_EXECUTABLE}" PARENT_SCOPE)
   set(CPPBESSOT_GIT_EXECUTABLE "${CPPBESSOT_GIT_EXECUTABLE}" PARENT_SCOPE)
+  set(CPPBESSOT_ODB_RUNTIME_LIB "${CPPBESSOT_ODB_RUNTIME_LIB}" PARENT_SCOPE)
+  set(CPPBESSOT_ODB_SQLITE_RUNTIME_LIB "${CPPBESSOT_ODB_SQLITE_RUNTIME_LIB}" PARENT_SCOPE)
+  set(CPPBESSOT_ODB_PGSQL_RUNTIME_LIB "${CPPBESSOT_ODB_PGSQL_RUNTIME_LIB}" PARENT_SCOPE)
+  set(CPPBESSOT_SQLITE_INCLUDE_DIR "${CPPBESSOT_SQLITE_INCLUDE_DIR}" PARENT_SCOPE)
+  set(CPPBESSOT_PGSQL_INCLUDE_DIR "${CPPBESSOT_PGSQL_INCLUDE_DIR}" PARENT_SCOPE)
   set(CPPBESSOT_OPENAPI_ZOD_AVAILABLE TRUE PARENT_SCOPE)
 endfunction()

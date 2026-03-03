@@ -76,8 +76,9 @@ function(cppbessot_add_generated_libraries)
   cppbessot_get_schema_dir_path(_version_dir "${CPPB_SCHEMA_DIR}")
 
   set(_cpp_include_dir "${_version_dir}/generated-cpp-source/include")
+  set(_model_leaf_include_dir "${_cpp_include_dir}/cppbessot/model")
   cppbessot_get_expected_cpp_model_outputs(_expected_model_headers _expected_model_sources "${CPPB_SCHEMA_DIR}")
-  file(GLOB _model_include_dirs LIST_DIRECTORIES true "${_cpp_include_dir}/*/model")
+  cppbessot_get_expected_odb_outputs(_expected_sqlite_odb_sources _expected_pgsql_odb_sources "${CPPB_SCHEMA_DIR}")
 
   set_source_files_properties(${_expected_model_headers} ${_expected_model_sources}
     PROPERTIES GENERATED TRUE)
@@ -90,37 +91,37 @@ function(cppbessot_add_generated_libraries)
   _cppbessot_try_link_nlohmann(cppBeSsotOpenAiModelGen)
   add_library(cppbessot::openai_model_gen ALIAS cppBeSsotOpenAiModelGen)
 
-  file(GLOB _sqlite_odb_sources CONFIGURE_DEPENDS
-    "${_version_dir}/generated-odb-source/sqlite/*-odb.cxx")
-  if(_sqlite_odb_sources)
-    add_library(cppBeSsotOdbSqlite SHARED ${_sqlite_odb_sources})
-    set_target_properties(cppBeSsotOdbSqlite PROPERTIES
-      OUTPUT_NAME "cppBeSsotOdbSqlite"
-      POSITION_INDEPENDENT_CODE ON)
-    target_include_directories(cppBeSsotOdbSqlite PUBLIC
-      "${_cpp_include_dir}"
-      "${_version_dir}/generated-odb-source/sqlite"
-      ${_model_include_dirs})
-    add_library(cppbessot::odb_sqlite ALIAS cppBeSsotOdbSqlite)
-  else()
-    message(WARNING "No generated sqlite ODB sources found for ${CPPB_SCHEMA_DIR}; skipping libcppBeSsotOdbSqlite.")
-  endif()
+  set_source_files_properties(${_expected_sqlite_odb_sources} PROPERTIES GENERATED TRUE)
+  add_library(cppBeSsotOdbSqlite SHARED ${_expected_sqlite_odb_sources})
+  add_dependencies(cppBeSsotOdbSqlite db_gen_odb_logic)
+  set_target_properties(cppBeSsotOdbSqlite PROPERTIES
+    OUTPUT_NAME "cppBeSsotOdbSqlite"
+    POSITION_INDEPENDENT_CODE ON)
+  target_include_directories(cppBeSsotOdbSqlite PUBLIC
+    "${_cpp_include_dir}"
+    "${_model_leaf_include_dir}"
+    "${_version_dir}/generated-odb-source/sqlite"
+    "${CPPBESSOT_SQLITE_INCLUDE_DIR}")
+  target_link_libraries(cppBeSsotOdbSqlite PUBLIC
+    "${CPPBESSOT_ODB_RUNTIME_LIB}"
+    "${CPPBESSOT_ODB_SQLITE_RUNTIME_LIB}")
+  add_library(cppbessot::odb_sqlite ALIAS cppBeSsotOdbSqlite)
 
-  file(GLOB _pgsql_odb_sources CONFIGURE_DEPENDS
-    "${_version_dir}/generated-odb-source/postgre/*-odb.cxx")
-  if(_pgsql_odb_sources)
-    add_library(cppBeSsotOdbPgSql SHARED ${_pgsql_odb_sources})
-    set_target_properties(cppBeSsotOdbPgSql PROPERTIES
-      OUTPUT_NAME "cppBeSsotOdbPgSql"
-      POSITION_INDEPENDENT_CODE ON)
-    target_include_directories(cppBeSsotOdbPgSql PUBLIC
-      "${_cpp_include_dir}"
-      "${_version_dir}/generated-odb-source/postgre"
-      ${_model_include_dirs})
-    add_library(cppbessot::odb_pgsql ALIAS cppBeSsotOdbPgSql)
-  else()
-    message(WARNING "No generated postgre ODB sources found for ${CPPB_SCHEMA_DIR}; skipping libcppBeSsotOdbPgSql.")
-  endif()
+  set_source_files_properties(${_expected_pgsql_odb_sources} PROPERTIES GENERATED TRUE)
+  add_library(cppBeSsotOdbPgSql SHARED ${_expected_pgsql_odb_sources})
+  add_dependencies(cppBeSsotOdbPgSql db_gen_odb_logic)
+  set_target_properties(cppBeSsotOdbPgSql PROPERTIES
+    OUTPUT_NAME "cppBeSsotOdbPgSql"
+    POSITION_INDEPENDENT_CODE ON)
+  target_include_directories(cppBeSsotOdbPgSql PUBLIC
+    "${_cpp_include_dir}"
+    "${_model_leaf_include_dir}"
+    "${_version_dir}/generated-odb-source/postgre"
+    "${CPPBESSOT_PGSQL_INCLUDE_DIR}")
+  target_link_libraries(cppBeSsotOdbPgSql PUBLIC
+    "${CPPBESSOT_ODB_RUNTIME_LIB}"
+    "${CPPBESSOT_ODB_PGSQL_RUNTIME_LIB}")
+  add_library(cppbessot::odb_pgsql ALIAS cppBeSsotOdbPgSql)
 endfunction()
 
 function(cppbessot_enable)

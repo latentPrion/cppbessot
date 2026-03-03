@@ -175,3 +175,28 @@ function(cppbessot_get_expected_cpp_model_outputs out_headers_var out_sources_va
   set(${out_headers_var} "${_headers}" PARENT_SCOPE)
   set(${out_sources_var} "${_sources}" PARENT_SCOPE)
 endfunction()
+
+function(cppbessot_get_expected_odb_outputs out_sqlite_sources_var out_pgsql_sources_var schema_dir)
+  # Purpose: Infer generated ODB backend source files from OpenAPI schema names.
+  # Inputs:
+  #   - out_sqlite_sources_var: Parent-scope variable for sqlite `*-odb.cxx`.
+  #   - out_pgsql_sources_var: Parent-scope variable for postgre `*-odb.cxx`.
+  #   - schema_dir: Schema directory basename.
+  # Outputs:
+  #   - <out_sqlite_sources_var> (PARENT_SCOPE): Expected sqlite ODB sources.
+  #   - <out_pgsql_sources_var> (PARENT_SCOPE): Expected postgre ODB sources.
+  cppbessot_get_schema_dir_path(_schema_dir_path "${schema_dir}")
+  cppbessot_get_openapi_schema_names(_schema_names "${schema_dir}")
+
+  set(_sqlite_sources)
+  set(_pgsql_sources)
+  foreach(_schema_name IN LISTS _schema_names)
+    list(APPEND _sqlite_sources
+      "${_schema_dir_path}/generated-odb-source/sqlite/${_schema_name}-odb.cxx")
+    list(APPEND _pgsql_sources
+      "${_schema_dir_path}/generated-odb-source/postgre/${_schema_name}-odb.cxx")
+  endforeach()
+
+  set(${out_sqlite_sources_var} "${_sqlite_sources}" PARENT_SCOPE)
+  set(${out_pgsql_sources_var} "${_pgsql_sources}" PARENT_SCOPE)
+endfunction()
