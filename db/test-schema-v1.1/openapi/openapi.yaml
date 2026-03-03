@@ -1,0 +1,95 @@
+openapi: 3.0.3
+info:
+  title: cppbessot-test-schema-v1.1
+  version: "1.1.0"
+  description: >
+    Self-contained test fixture for cppbessot serdes and migration validation.
+paths: {}
+components:
+  schemas:
+    Agent:
+      type: object
+      x-odbModelVersion: "1, 1"
+      x-odbTable: Agent
+      required:
+        - id
+        - role
+        - persistent
+      properties:
+        id:
+          type: string
+          x-odbId: true
+          x-odbAddedIn: "1.1"
+        role:
+          type: string
+          x-odbAddedIn: "1.1"
+        persistent:
+          type: boolean
+          x-odbAddedIn: "1.1"
+        displayName:
+          type: string
+          x-odbAddedIn: "1.1"
+
+    GovernmentAddress:
+      type: object
+      x-odbModelVersion: "1, 1"
+      x-odbTable: GovernmentAddress
+      required:
+        - id
+      properties:
+        id:
+          type: string
+          x-odbId: true
+          x-odbAddedIn: "1.1"
+        addressLabel:
+          type: string
+          x-odbAddedIn: "1.1"
+        regionLookupKey:
+          type: string
+          x-odbAddedIn: "1.1"
+
+    TripAttemptResult:
+      type: object
+      x-odbModelVersion: "1, 1"
+      x-odbTable: TripAttemptResult
+      required:
+        - id
+        - result
+      properties:
+        id:
+          type: string
+          x-odbId: true
+          x-odbAddedIn: "1.1"
+        result:
+          type: string
+          x-odbAddedIn: "1.1"
+        retryReason:
+          type: string
+          x-odbAddedIn: "1.1"
+        governmentSuspensionReason:
+          type: string
+          x-odbAddedIn: "1.1"
+        governmentTerminationReason:
+          type: string
+          x-odbAddedIn: "1.1"
+        complianceSuspensionReason:
+          type: string
+          x-odbAddedIn: "1.1"
+        complianceTerminationReason:
+          type: string
+          x-odbAddedIn: "1.1"
+        policySuspensionReason:
+          type: string
+          x-odbAddedIn: "1.1"
+        policyTerminationReason:
+          type: string
+          x-odbAddedIn: "1.1"
+        cancelationReason:
+          type: string
+          x-odbAddedIn: "1.1"
+        failureReason:
+          type: string
+          x-odbAddedIn: "1.1"
+        details:
+          type: string
+          x-odbAddedIn: "1.1"
