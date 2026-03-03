@@ -1,0 +1,14 @@
+<changelog xmlns="http://www.codesynthesis.com/xmlns/odb/changelog" database="sqlite" version="1">
+  <changeset version="2">
+    <add-table name="GovernmentAddress" kind="object">
+      <column name="id" type="TEXT" null="false"/>
+      <column name="addressLabel" type="TEXT" null="false"/>
+      <column name="regionLookupKey" type="TEXT" null="false"/>
+      <primary-key>
+        <column name="id"/>
+      </primary-key>
+    </add-table>
+  </changeset>
+
+  <model version="1"/>
+</changelog>

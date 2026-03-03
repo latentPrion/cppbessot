@@ -1,0 +1,10 @@
+.openapi-generator-ignore
+docs/Agent.md
+docs/GovernmentAddress.md
+docs/TripAttemptResult.md
+index.ts
+models/Agent.ts
+models/GovernmentAddress.ts
+models/TripAttemptResult.ts
+models/index.ts
+runtime.ts
