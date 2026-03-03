@@ -67,7 +67,7 @@ These tests validate that checked-in generated C++ model code can be compiled an
 
 ```bash
 git submodule update --init --recursive tests/googletest
-cmake -S . -B build-tests -DDB_SCHEMA_DIR_TO_GENERATE=test-schema-v1.2
+cmake -S . -B build-tests -DBUILD_TESTING=ON -DDB_SCHEMA_DIR_TO_GENERATE=test-schema-v1.2
 cmake --build build-tests --target cpp_serdes_test_schema_v1_2
 ctest --test-dir build-tests --output-on-failure
 ```

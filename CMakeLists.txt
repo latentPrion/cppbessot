@@ -11,8 +11,12 @@ endif()
 
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/CppBeSSOT.cmake")
 
+if(NOT DEFINED BUILD_TESTING)
+  set(BUILD_TESTING OFF CACHE BOOL "Build cppbessot tests" FORCE)
+endif()
+
 include(CTest)
 
 if(BUILD_TESTING)
-  add_subdirectory(tests EXCLUDE_FROM_ALL)
+  add_subdirectory(tests)
 endif()
