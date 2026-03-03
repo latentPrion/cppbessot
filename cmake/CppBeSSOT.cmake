@@ -76,21 +76,19 @@ function(cppbessot_add_generated_libraries)
   cppbessot_get_schema_dir_path(_version_dir "${CPPB_SCHEMA_DIR}")
 
   set(_cpp_include_dir "${_version_dir}/generated-cpp-source/include")
+  cppbessot_get_expected_cpp_model_outputs(_expected_model_headers _expected_model_sources "${CPPB_SCHEMA_DIR}")
   file(GLOB _model_include_dirs LIST_DIRECTORIES true "${_cpp_include_dir}/*/model")
 
-  file(GLOB _model_sources CONFIGURE_DEPENDS
-    "${_version_dir}/generated-cpp-source/src/model/*.cpp")
-  if(_model_sources)
-    add_library(cppBeSsotOpenAiModelGen STATIC ${_model_sources})
-    set_target_properties(cppBeSsotOpenAiModelGen PROPERTIES
-      OUTPUT_NAME "cppBeSsotOpenAiModelGen"
-      POSITION_INDEPENDENT_CODE ON)
-    target_include_directories(cppBeSsotOpenAiModelGen PUBLIC "${_cpp_include_dir}")
-    _cppbessot_try_link_nlohmann(cppBeSsotOpenAiModelGen)
-    add_library(cppbessot::openai_model_gen ALIAS cppBeSsotOpenAiModelGen)
-  else()
-    message(WARNING "No generated C++ model sources found for ${CPPB_SCHEMA_DIR}; skipping libcppBeSsotOpenAiModelGen.")
-  endif()
+  set_source_files_properties(${_expected_model_headers} ${_expected_model_sources}
+    PROPERTIES GENERATED TRUE)
+  add_library(cppBeSsotOpenAiModelGen STATIC ${_expected_model_sources})
+  add_dependencies(cppBeSsotOpenAiModelGen db_gen_cpp_headers)
+  set_target_properties(cppBeSsotOpenAiModelGen PROPERTIES
+    OUTPUT_NAME "cppBeSsotOpenAiModelGen"
+    POSITION_INDEPENDENT_CODE ON)
+  target_include_directories(cppBeSsotOpenAiModelGen PUBLIC "${_cpp_include_dir}")
+  _cppbessot_try_link_nlohmann(cppBeSsotOpenAiModelGen)
+  add_library(cppbessot::openai_model_gen ALIAS cppBeSsotOpenAiModelGen)
 
   file(GLOB _sqlite_odb_sources CONFIGURE_DEPENDS
     "${_version_dir}/generated-odb-source/sqlite/*-odb.cxx")

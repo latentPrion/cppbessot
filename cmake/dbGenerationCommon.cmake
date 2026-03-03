@@ -102,3 +102,76 @@ function(cppbessot_get_model_headers_glob out_var schema_dir)
   cppbessot_get_schema_dir_path(_schema_dir_path "${schema_dir}")
   set(${out_var} "${_schema_dir_path}/generated-cpp-source/include/*/model/*.h" PARENT_SCOPE)
 endfunction()
+
+function(cppbessot_get_openapi_schema_names out_var schema_dir)
+  # Purpose: Parse top-level component schema names from a schema directory's OpenAPI file.
+  # Inputs:
+  #   - out_var: Parent-scope variable name to receive the schema names.
+  #   - schema_dir: Schema directory basename.
+  # Outputs:
+  #   - <out_var> (PARENT_SCOPE): List of top-level component schema names.
+  cppbessot_get_schema_dir_path(_schema_dir_path "${schema_dir}")
+  set(_openapi_file "${_schema_dir_path}/openapi/openapi.yaml")
+  if(NOT EXISTS "${_openapi_file}")
+    message(FATAL_ERROR "OpenAPI file does not exist: ${_openapi_file}")
+  endif()
+
+  file(STRINGS "${_openapi_file}" _openapi_lines)
+  set(_schema_names)
+  set(_in_components FALSE)
+  set(_in_schemas FALSE)
+
+  foreach(_line IN LISTS _openapi_lines)
+    if(_in_schemas)
+      if(_line MATCHES "^[^ ]" OR _line MATCHES "^  [^ ]")
+        set(_in_schemas FALSE)
+      elseif(_line MATCHES "^    ([A-Za-z_][A-Za-z0-9_]*)[ \t]*:[ \t]*$")
+        list(APPEND _schema_names "${CMAKE_MATCH_1}")
+      endif()
+    endif()
+
+    if(_in_components AND NOT _in_schemas)
+      if(_line MATCHES "^[^ ]")
+        set(_in_components FALSE)
+      elseif(_line MATCHES "^  schemas:[ \t]*$")
+        set(_in_schemas TRUE)
+      endif()
+    endif()
+
+    if(_line MATCHES "^components:[ \t]*$")
+      set(_in_components TRUE)
+    endif()
+  endforeach()
+
+  if(NOT _schema_names)
+    message(FATAL_ERROR
+      "No component schema names were found in ${_openapi_file}.")
+  endif()
+
+  set(${out_var} "${_schema_names}" PARENT_SCOPE)
+endfunction()
+
+function(cppbessot_get_expected_cpp_model_outputs out_headers_var out_sources_var schema_dir)
+  # Purpose: Infer generated C++ model headers and sources from OpenAPI schema names.
+  # Inputs:
+  #   - out_headers_var: Parent-scope variable name to receive expected headers.
+  #   - out_sources_var: Parent-scope variable name to receive expected sources.
+  #   - schema_dir: Schema directory basename.
+  # Outputs:
+  #   - <out_headers_var> (PARENT_SCOPE): Expected generated model headers.
+  #   - <out_sources_var> (PARENT_SCOPE): Expected generated model sources.
+  cppbessot_get_schema_dir_path(_schema_dir_path "${schema_dir}")
+  cppbessot_get_openapi_schema_names(_schema_names "${schema_dir}")
+
+  set(_headers)
+  set(_sources)
+  foreach(_schema_name IN LISTS _schema_names)
+    list(APPEND _headers
+      "${_schema_dir_path}/generated-cpp-source/include/cppbessot/model/${_schema_name}.h")
+    list(APPEND _sources
+      "${_schema_dir_path}/generated-cpp-source/src/model/${_schema_name}.cpp")
+  endforeach()
+
+  set(${out_headers_var} "${_headers}" PARENT_SCOPE)
+  set(${out_sources_var} "${_sources}" PARENT_SCOPE)
+endfunction()

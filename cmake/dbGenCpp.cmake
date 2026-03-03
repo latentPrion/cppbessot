@@ -23,6 +23,7 @@ function(cppbessot_add_db_gen_cpp_target schema_dir)
   set(_template_dir "${_module_root}/openapi/templates/cpp-odb-json")
   set(_template_config "${_template_dir}/config.yaml")
   set(_output_dir "${_version_dir}/generated-cpp-source")
+  file(GLOB_RECURSE _template_inputs CONFIGURE_DEPENDS "${_template_dir}/*")
 
   add_custom_target(db_gen_cpp_headers
     COMMAND ${CMAKE_COMMAND} -E make_directory "${_output_dir}"
@@ -33,6 +34,7 @@ function(cppbessot_add_db_gen_cpp_target schema_dir)
             -c "${_template_config}"
             -o "${_output_dir}"
             --global-property models
+    DEPENDS "${_openapi_file}" ${_template_inputs}
     COMMENT "Generating C++ model headers/sources for ${schema_dir}"
     VERBATIM
   )
