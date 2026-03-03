@@ -48,6 +48,69 @@ function(_cppbessot_try_link_nlohmann target_name)
   endif()
 endfunction()
 
+function(_cppbessot_add_generated_model_library cpp_include_dir expected_model_headers expected_model_sources)
+  set_source_files_properties(${expected_model_headers} ${expected_model_sources}
+    PROPERTIES GENERATED TRUE)
+  add_library(cppBeSsotOpenAiModelGen STATIC ${expected_model_sources})
+  add_dependencies(cppBeSsotOpenAiModelGen db_gen_cpp_headers)
+  set_target_properties(cppBeSsotOpenAiModelGen PROPERTIES
+    OUTPUT_NAME "cppBeSsotOpenAiModelGen"
+    POSITION_INDEPENDENT_CODE ON)
+  target_include_directories(cppBeSsotOpenAiModelGen PUBLIC "${cpp_include_dir}")
+  _cppbessot_try_link_nlohmann(cppBeSsotOpenAiModelGen)
+  add_library(cppbessot::openai_model_gen ALIAS cppBeSsotOpenAiModelGen)
+endfunction()
+
+function(_cppbessot_add_generated_sqlite_library
+    cpp_include_dir
+    model_leaf_include_dir
+    version_dir
+    expected_sqlite_odb_sources)
+  set_source_files_properties(${expected_sqlite_odb_sources} PROPERTIES GENERATED TRUE)
+  add_library(cppBeSsotOdbSqlite SHARED ${expected_sqlite_odb_sources})
+  # Keep the ODB library aligned with the SQL snapshots emitted from the same schema generation pass.
+  add_dependencies(cppBeSsotOdbSqlite
+    db_gen_odb_logic
+    db_gen_sql_ddl)
+  set_target_properties(cppBeSsotOdbSqlite PROPERTIES
+    OUTPUT_NAME "cppBeSsotOdbSqlite"
+    POSITION_INDEPENDENT_CODE ON)
+  target_include_directories(cppBeSsotOdbSqlite PUBLIC
+    "${cpp_include_dir}"
+    "${model_leaf_include_dir}"
+    "${version_dir}/generated-odb-source/sqlite"
+    "${CPPBESSOT_SQLITE_INCLUDE_DIR}")
+  target_link_libraries(cppBeSsotOdbSqlite PUBLIC
+    "${CPPBESSOT_ODB_RUNTIME_LIB}"
+    "${CPPBESSOT_ODB_SQLITE_RUNTIME_LIB}")
+  add_library(cppbessot::odb_sqlite ALIAS cppBeSsotOdbSqlite)
+endfunction()
+
+function(_cppbessot_add_generated_pgsql_library
+    cpp_include_dir
+    model_leaf_include_dir
+    version_dir
+    expected_pgsql_odb_sources)
+  set_source_files_properties(${expected_pgsql_odb_sources} PROPERTIES GENERATED TRUE)
+  add_library(cppBeSsotOdbPgSql SHARED ${expected_pgsql_odb_sources})
+  # Keep the ODB library aligned with the SQL snapshots emitted from the same schema generation pass.
+  add_dependencies(cppBeSsotOdbPgSql
+    db_gen_odb_logic
+    db_gen_sql_ddl)
+  set_target_properties(cppBeSsotOdbPgSql PROPERTIES
+    OUTPUT_NAME "cppBeSsotOdbPgSql"
+    POSITION_INDEPENDENT_CODE ON)
+  target_include_directories(cppBeSsotOdbPgSql PUBLIC
+    "${cpp_include_dir}"
+    "${model_leaf_include_dir}"
+    "${version_dir}/generated-odb-source/postgre"
+    "${CPPBESSOT_PGSQL_INCLUDE_DIR}")
+  target_link_libraries(cppBeSsotOdbPgSql PUBLIC
+    "${CPPBESSOT_ODB_RUNTIME_LIB}"
+    "${CPPBESSOT_ODB_PGSQL_RUNTIME_LIB}")
+  add_library(cppbessot::odb_pgsql ALIAS cppBeSsotOdbPgSql)
+endfunction()
+
 function(cppbessot_add_generated_libraries)
   # Purpose: Create consumable libraries from generated model and ODB sources.
   # Inputs:
@@ -80,48 +143,20 @@ function(cppbessot_add_generated_libraries)
   cppbessot_get_expected_cpp_model_outputs(_expected_model_headers _expected_model_sources "${CPPB_SCHEMA_DIR}")
   cppbessot_get_expected_odb_outputs(_expected_sqlite_odb_sources _expected_pgsql_odb_sources "${CPPB_SCHEMA_DIR}")
 
-  set_source_files_properties(${_expected_model_headers} ${_expected_model_sources}
-    PROPERTIES GENERATED TRUE)
-  add_library(cppBeSsotOpenAiModelGen STATIC ${_expected_model_sources})
-  add_dependencies(cppBeSsotOpenAiModelGen db_gen_cpp_headers)
-  set_target_properties(cppBeSsotOpenAiModelGen PROPERTIES
-    OUTPUT_NAME "cppBeSsotOpenAiModelGen"
-    POSITION_INDEPENDENT_CODE ON)
-  target_include_directories(cppBeSsotOpenAiModelGen PUBLIC "${_cpp_include_dir}")
-  _cppbessot_try_link_nlohmann(cppBeSsotOpenAiModelGen)
-  add_library(cppbessot::openai_model_gen ALIAS cppBeSsotOpenAiModelGen)
-
-  set_source_files_properties(${_expected_sqlite_odb_sources} PROPERTIES GENERATED TRUE)
-  add_library(cppBeSsotOdbSqlite SHARED ${_expected_sqlite_odb_sources})
-  add_dependencies(cppBeSsotOdbSqlite db_gen_odb_logic)
-  set_target_properties(cppBeSsotOdbSqlite PROPERTIES
-    OUTPUT_NAME "cppBeSsotOdbSqlite"
-    POSITION_INDEPENDENT_CODE ON)
-  target_include_directories(cppBeSsotOdbSqlite PUBLIC
+  _cppbessot_add_generated_model_library(
+    "${_cpp_include_dir}"
+    "${_expected_model_headers}"
+    "${_expected_model_sources}")
+  _cppbessot_add_generated_sqlite_library(
     "${_cpp_include_dir}"
     "${_model_leaf_include_dir}"
-    "${_version_dir}/generated-odb-source/sqlite"
-    "${CPPBESSOT_SQLITE_INCLUDE_DIR}")
-  target_link_libraries(cppBeSsotOdbSqlite PUBLIC
-    "${CPPBESSOT_ODB_RUNTIME_LIB}"
-    "${CPPBESSOT_ODB_SQLITE_RUNTIME_LIB}")
-  add_library(cppbessot::odb_sqlite ALIAS cppBeSsotOdbSqlite)
-
-  set_source_files_properties(${_expected_pgsql_odb_sources} PROPERTIES GENERATED TRUE)
-  add_library(cppBeSsotOdbPgSql SHARED ${_expected_pgsql_odb_sources})
-  add_dependencies(cppBeSsotOdbPgSql db_gen_odb_logic)
-  set_target_properties(cppBeSsotOdbPgSql PROPERTIES
-    OUTPUT_NAME "cppBeSsotOdbPgSql"
-    POSITION_INDEPENDENT_CODE ON)
-  target_include_directories(cppBeSsotOdbPgSql PUBLIC
+    "${_version_dir}"
+    "${_expected_sqlite_odb_sources}")
+  _cppbessot_add_generated_pgsql_library(
     "${_cpp_include_dir}"
     "${_model_leaf_include_dir}"
-    "${_version_dir}/generated-odb-source/postgre"
-    "${CPPBESSOT_PGSQL_INCLUDE_DIR}")
-  target_link_libraries(cppBeSsotOdbPgSql PUBLIC
-    "${CPPBESSOT_ODB_RUNTIME_LIB}"
-    "${CPPBESSOT_ODB_PGSQL_RUNTIME_LIB}")
-  add_library(cppbessot::odb_pgsql ALIAS cppBeSsotOdbPgSql)
+    "${_version_dir}"
+    "${_expected_pgsql_odb_sources}")
 endfunction()
 
 function(cppbessot_enable)

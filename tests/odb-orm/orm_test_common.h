@@ -49,10 +49,19 @@ inline std::vector<std::filesystem::path> cppbessot_sql_files()
   std::vector<std::filesystem::path> files;
   for(const auto& entry : std::filesystem::directory_iterator(sql_dir))
   {
-    if(entry.is_regular_file() && entry.path().extension() == ".sql")
+    if(!entry.is_regular_file() || entry.path().extension() != ".sql")
     {
-      files.push_back(entry.path());
+      continue;
     }
+
+    const std::string stem = entry.path().stem().string();
+    if(stem.ends_with("-pre") || stem.ends_with("-post"))
+    {
+      // These roundtrip tests bootstrap from full schema snapshots, not ODB migration fragments.
+      continue;
+    }
+
+    files.push_back(entry.path());
   }
 
   std::sort(files.begin(), files.end());
