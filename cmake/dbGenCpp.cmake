@@ -3,16 +3,16 @@ include_guard(GLOBAL)
 include("${CMAKE_CURRENT_LIST_DIR}/dbGenerationCommon.cmake")
 set(_CPPBESSOT_DB_GEN_CPP_DIR "${CMAKE_CURRENT_LIST_DIR}")
 
-function(cppbessot_add_db_gen_cpp_target version)
+function(cppbessot_add_db_gen_cpp_target schema_dir)
   # Purpose: Register C++ model generation target using checked-in templates.
   # Inputs:
-  #   - version: Schema version to generate for.
+  #   - schema_dir: Schema directory basename to generate for.
   #   - CPPBESSOT_NPX_EXECUTABLE: Path to `npx`.
   # Outputs:
   #   - CMake target: `db_gen_cpp_headers` (EXCLUDE_FROM_ALL).
-  #   - Files under `<version>/generated-cpp-source`.
-  cppbessot_validate_schema_version("${version}")
-  cppbessot_get_version_dir(_version_dir "${version}")
+  #   - Files under `<schema_dir>/generated-cpp-source`.
+  cppbessot_validate_schema_dir_name("${schema_dir}")
+  cppbessot_get_schema_dir_path(_version_dir "${schema_dir}")
   if(DEFINED CPPBESSOT_MODULE_ROOT AND NOT "${CPPBESSOT_MODULE_ROOT}" STREQUAL "")
     set(_module_root "${CPPBESSOT_MODULE_ROOT}")
   else()
@@ -33,7 +33,7 @@ function(cppbessot_add_db_gen_cpp_target version)
             -c "${_template_config}"
             -o "${_output_dir}"
             --global-property models
-    COMMENT "Generating C++ model headers/sources for ${version}"
+    COMMENT "Generating C++ model headers/sources for ${schema_dir}"
     VERBATIM
   )
 

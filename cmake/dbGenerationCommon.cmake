@@ -52,65 +52,53 @@ function(cppbessot_require_var var_name)
   endif()
 endfunction()
 
-function(cppbessot_validate_schema_version version)
-  # Purpose: Validate schema version format and enforce major >= 1.
+function(cppbessot_validate_schema_dir_name schema_dir)
+  # Purpose: Validate that a schema directory selector is a basename, not a path.
   # Inputs:
-  #   - version: Expected format `v<major>.<minor>` (e.g. v1.1).
+  #   - schema_dir: Directory basename under CPPBESSOT_WORKDIR.
   # Outputs:
   #   - No return value; raises FATAL_ERROR if format is invalid.
-  if(NOT "${version}" MATCHES "^v([1-9][0-9]*)\\.([0-9]+)$")
+  if("${schema_dir}" STREQUAL "")
+    message(FATAL_ERROR "Schema directory name must not be empty.")
+  endif()
+
+  if("${schema_dir}" MATCHES "[/\\\\]")
     message(FATAL_ERROR
-      "Invalid schema version `${version}`. Expected format `v<major>.<minor>` with major >= 1 (e.g. v1.1, v1.2).")
+      "Schema directory name `${schema_dir}` must be a basename under CPPBESSOT_WORKDIR, not a path.")
   endif()
 endfunction()
 
-function(cppbessot_get_version_parts version out_major out_minor)
-  # Purpose: Parse schema version string into numeric major/minor components.
-  # Inputs:
-  #   - version: Schema version string.
-  #   - out_major: Parent-scope variable name for major part.
-  #   - out_minor: Parent-scope variable name for minor part.
-  # Outputs:
-  #   - <out_major> (PARENT_SCOPE): Major component.
-  #   - <out_minor> (PARENT_SCOPE): Minor component.
-  cppbessot_validate_schema_version("${version}")
-  string(REGEX REPLACE "^v([1-9][0-9]*)\\.([0-9]+)$" "\\1" _major "${version}")
-  string(REGEX REPLACE "^v([1-9][0-9]*)\\.([0-9]+)$" "\\2" _minor "${version}")
-  set(${out_major} "${_major}" PARENT_SCOPE)
-  set(${out_minor} "${_minor}" PARENT_SCOPE)
-endfunction()
-
-function(cppbessot_get_version_dir out_var version)
-  # Purpose: Resolve the absolute folder path for a specific schema version.
+function(cppbessot_get_schema_dir_path out_var schema_dir)
+  # Purpose: Resolve the absolute folder path for a specific schema directory.
   # Inputs:
   #   - out_var: Parent-scope variable name to receive the path.
-  #   - version: Schema version string.
+  #   - schema_dir: Schema directory basename under CPPBESSOT_WORKDIR.
   # Outputs:
-  #   - <out_var> (PARENT_SCOPE): Absolute `${CPPBESSOT_WORKDIR}/<version>` path.
-  cppbessot_validate_schema_version("${version}")
+  #   - <out_var> (PARENT_SCOPE): Absolute `${CPPBESSOT_WORKDIR}/<schema_dir>` path.
+  cppbessot_validate_schema_dir_name("${schema_dir}")
   cppbessot_abs_path(_workdir "${CPPBESSOT_WORKDIR}")
-  set(${out_var} "${_workdir}/${version}" PARENT_SCOPE)
+  set(${out_var} "${_workdir}/${schema_dir}" PARENT_SCOPE)
 endfunction()
 
-function(cppbessot_assert_version_dir_exists version)
-  # Purpose: Assert that a schema version directory exists on disk.
+function(cppbessot_assert_schema_dir_exists schema_dir)
+  # Purpose: Assert that a schema directory exists on disk.
   # Inputs:
-  #   - version: Schema version string.
+  #   - schema_dir: Schema directory basename.
   # Outputs:
   #   - No return value; raises FATAL_ERROR if directory is missing.
-  cppbessot_get_version_dir(_version_dir "${version}")
-  if(NOT IS_DIRECTORY "${_version_dir}")
-    message(FATAL_ERROR "Schema version folder does not exist: ${_version_dir}")
+  cppbessot_get_schema_dir_path(_schema_dir_path "${schema_dir}")
+  if(NOT IS_DIRECTORY "${_schema_dir_path}")
+    message(FATAL_ERROR "Schema directory does not exist: ${_schema_dir_path}")
   endif()
 endfunction()
 
-function(cppbessot_get_model_headers_glob out_var version)
-  # Purpose: Build a model-header glob expression for a schema version.
+function(cppbessot_get_model_headers_glob out_var schema_dir)
+  # Purpose: Build a model-header glob expression for a schema directory.
   # Inputs:
   #   - out_var: Parent-scope variable name to receive the glob pattern.
-  #   - version: Schema version string.
+  #   - schema_dir: Schema directory basename.
   # Outputs:
   #   - <out_var> (PARENT_SCOPE): Glob pattern for generated model headers.
-  cppbessot_get_version_dir(_version_dir "${version}")
-  set(${out_var} "${_version_dir}/generated-cpp-source/include/*/model/*.h" PARENT_SCOPE)
+  cppbessot_get_schema_dir_path(_schema_dir_path "${schema_dir}")
+  set(${out_var} "${_schema_dir_path}/generated-cpp-source/include/*/model/*.h" PARENT_SCOPE)
 endfunction()

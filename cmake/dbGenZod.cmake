@@ -2,16 +2,16 @@ include_guard(GLOBAL)
 
 include("${CMAKE_CURRENT_LIST_DIR}/dbGenerationCommon.cmake")
 
-function(cppbessot_add_db_gen_zod_target version)
+function(cppbessot_add_db_gen_zod_target schema_dir)
   # Purpose: Register Zod schema generation target from OpenAPI input.
   # Inputs:
-  #   - version: Schema version to generate for.
+  #   - schema_dir: Schema directory basename to generate for.
   #   - CPPBESSOT_NPX_EXECUTABLE: Path to `npx`.
   # Outputs:
   #   - CMake target: `db_gen_zod` (EXCLUDE_FROM_ALL).
-  #   - File `<version>/generated-zod/schemas.ts`.
-  cppbessot_validate_schema_version("${version}")
-  cppbessot_get_version_dir(_version_dir "${version}")
+  #   - File `<schema_dir>/generated-zod/schemas.ts`.
+  cppbessot_validate_schema_dir_name("${schema_dir}")
+  cppbessot_get_schema_dir_path(_version_dir "${schema_dir}")
 
   set(_openapi_file "${_version_dir}/openapi/openapi.yaml")
   set(_output_dir "${_version_dir}/generated-zod")
@@ -27,7 +27,7 @@ function(cppbessot_add_db_gen_zod_target version)
     COMMAND ${CMAKE_COMMAND}
             -DCPPBESSOT_TARGET_FILE="${_output_file}"
             -P "${_prepend_notice_script}"
-    COMMENT "Generating Zod schemas for ${version}"
+    COMMENT "Generating Zod schemas for ${schema_dir}"
     VERBATIM
   )
 

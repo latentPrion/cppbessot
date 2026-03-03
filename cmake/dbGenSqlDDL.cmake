@@ -3,16 +3,16 @@ include_guard(GLOBAL)
 include("${CMAKE_CURRENT_LIST_DIR}/dbGenerationCommon.cmake")
 set(_CPPBESSOT_DB_GEN_SQL_DDL_DIR "${CMAKE_CURRENT_LIST_DIR}")
 
-function(cppbessot_add_db_gen_sql_ddl_target version)
+function(cppbessot_add_db_gen_sql_ddl_target schema_dir)
   # Purpose: Register SQL DDL snapshot generation target for supported backends.
   # Inputs:
-  #   - version: Schema version to generate for.
+  #   - schema_dir: Schema directory basename to generate for.
   #   - CPPBESSOT_ODB_EXECUTABLE: Path to `odb` compiler.
   # Outputs:
   #   - CMake target: `db_gen_sql_ddl` (EXCLUDE_FROM_ALL).
-  #   - Files under `<version>/generated-sql-ddl/{sqlite,postgre}`.
-  cppbessot_validate_schema_version("${version}")
-  cppbessot_get_version_dir(_version_dir "${version}")
+  #   - Files under `<schema_dir>/generated-sql-ddl/{sqlite,postgre}`.
+  cppbessot_validate_schema_dir_name("${schema_dir}")
+  cppbessot_get_schema_dir_path(_version_dir "${schema_dir}")
 
   add_custom_target(db_gen_sql_ddl
     COMMAND "${CMAKE_COMMAND}"
@@ -20,7 +20,7 @@ function(cppbessot_add_db_gen_sql_ddl_target version)
             -DCPPBESSOT_VERSION_DIR=${_version_dir}
             -P "${_CPPBESSOT_DB_GEN_SQL_DDL_DIR}/scripts/run_odb_sql_ddl.cmake"
     DEPENDS db_gen_cpp_headers
-    COMMENT "Generating SQL DDL snapshots for ${version} (sqlite + postgre)"
+    COMMENT "Generating SQL DDL snapshots for ${schema_dir} (sqlite + postgre)"
     VERBATIM
   )
 

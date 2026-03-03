@@ -16,6 +16,11 @@ The primary schema root folder is configurable via:
 
 - `CPPBESSOT_WORKDIR` (defaults to `db`)
 
+This repo also carries self-contained schema fixtures for test runs:
+
+- `db/test-schema-v1.1`
+- `db/test-schema-v1.2`
+
 ## Simple Integration Guide
 
 ### 1) Add the module from your parent project
@@ -25,15 +30,15 @@ The primary schema root folder is configurable via:
 cmake_minimum_required(VERSION 3.16)
 project(MyApp LANGUAGES CXX)
 
-# Optional: where schema versions live (default is "db")
+# Optional: where schema directories live (default is "db")
 set(CPPBESSOT_WORKDIR "db")
 
-# Required for generation/library selection
-set(DB_SCHEMA_VERSION_TO_GENERATE "v1.1")
+# Required: exact schema directory basename under CPPBESSOT_WORKDIR
+set(DB_SCHEMA_DIR_TO_GENERATE "v1.1")
 
 # Optional: only needed if you will run db_gen_migrations
-# set(DB_SCHEMA_MIGRATION_VERSION_FROM "v1.1")
-# set(DB_SCHEMA_MIGRATION_VERSION_TO "v1.2")
+# set(DB_SCHEMA_DIR_MIGRATION_FROM "v1.1")
+# set(DB_SCHEMA_DIR_MIGRATION_TO "v1.2")
 
 include(path/to/cppbessot/cmake/CppBeSSOT.cmake)
 ```
@@ -51,10 +56,23 @@ Optional migration generation:
 
 ```bash
 cmake -S . -B build \
-  -DDB_SCHEMA_MIGRATION_VERSION_FROM=v1.1 \
-  -DDB_SCHEMA_MIGRATION_VERSION_TO=v1.2
+  -DDB_SCHEMA_DIR_MIGRATION_FROM=v1.1 \
+  -DDB_SCHEMA_DIR_MIGRATION_TO=v1.2
 cmake --build build --target db_gen_migrations
 ```
+
+### 2b) Build the bundled serdes tests
+
+These tests validate that checked-in generated C++ model code can be compiled and used for JSON round trips. They are owned by `cppbessot`, not by any parent project.
+
+```bash
+git submodule update --init --recursive tests/googletest
+cmake -S . -B build-tests -DDB_SCHEMA_DIR_TO_GENERATE=test-schema-v1.2
+cmake --build build-tests --target cpp_serdes_test_schema_v1_2
+ctest --test-dir build-tests --output-on-failure
+```
+
+The local test fixtures live under `db/test-schema-v1.1` and `db/test-schema-v1.2`. They intentionally differ so migration generation has real additive schema changes to process.
 
 ### 3) Link generated libraries
 
