@@ -5,3 +5,4 @@ endif()
 
 add_subdirectory(googletest)
 add_subdirectory(cpp-serdes)
+add_subdirectory(odb-orm)

@@ -175,6 +175,18 @@ function(cppbessot_check_dependencies)
       "PostgreSQL development headers are not usable. Expected to compile with include path `${CPPBESSOT_PGSQL_INCLUDE_DIR}`.")
   endif()
 
+  find_library(CPPBESSOT_SQLITE_CLIENT_LIB NAMES sqlite3 libsqlite3)
+  if(NOT CPPBESSOT_SQLITE_CLIENT_LIB)
+    message(FATAL_ERROR
+      "SQLite client library was not found. On Ubuntu/Debian install package `libsqlite3-dev`.")
+  endif()
+
+  find_library(CPPBESSOT_PGSQL_CLIENT_LIB NAMES pq libpq)
+  if(NOT CPPBESSOT_PGSQL_CLIENT_LIB)
+    message(FATAL_ERROR
+      "PostgreSQL client library was not found. On Ubuntu/Debian install package `libpq-dev`.")
+  endif()
+
   set(CPPBESSOT_ODB_EXECUTABLE "${CPPBESSOT_ODB_EXECUTABLE}" PARENT_SCOPE)
   set(CPPBESSOT_NPX_EXECUTABLE "${CPPBESSOT_NPX_EXECUTABLE}" PARENT_SCOPE)
   set(CPPBESSOT_NPM_EXECUTABLE "${CPPBESSOT_NPM_EXECUTABLE}" PARENT_SCOPE)
@@ -185,5 +197,7 @@ function(cppbessot_check_dependencies)
   set(CPPBESSOT_ODB_PGSQL_RUNTIME_LIB "${CPPBESSOT_ODB_PGSQL_RUNTIME_LIB}" PARENT_SCOPE)
   set(CPPBESSOT_SQLITE_INCLUDE_DIR "${CPPBESSOT_SQLITE_INCLUDE_DIR}" PARENT_SCOPE)
   set(CPPBESSOT_PGSQL_INCLUDE_DIR "${CPPBESSOT_PGSQL_INCLUDE_DIR}" PARENT_SCOPE)
+  set(CPPBESSOT_SQLITE_CLIENT_LIB "${CPPBESSOT_SQLITE_CLIENT_LIB}" PARENT_SCOPE)
+  set(CPPBESSOT_PGSQL_CLIENT_LIB "${CPPBESSOT_PGSQL_CLIENT_LIB}" PARENT_SCOPE)
   set(CPPBESSOT_OPENAPI_ZOD_AVAILABLE TRUE PARENT_SCOPE)
 endfunction()

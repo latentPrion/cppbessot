@@ -9,6 +9,11 @@ if(NOT DEFINED DB_SCHEMA_DIR_TO_GENERATE OR "${DB_SCHEMA_DIR_TO_GENERATE}" STREQ
     "Set DB_SCHEMA_DIR_TO_GENERATE to the exact schema directory basename to test, for example -DDB_SCHEMA_DIR_TO_GENERATE=v1.2.")
 endif()
 
+set(CPPBESSOT_ODB_TEST_SQLITE_CONNSTR "" CACHE STRING
+  "Optional SQLite connection string for ODB runtime tests")
+set(CPPBESSOT_ODB_TEST_PGSQL_CONNSTR "" CACHE STRING
+  "Optional PostgreSQL conninfo string for ODB runtime tests")
+
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/CppBeSSOT.cmake")
 
 if(NOT DEFINED BUILD_TESTING)

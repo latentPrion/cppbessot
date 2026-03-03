@@ -74,6 +74,23 @@ ctest --test-dir build-tests --output-on-failure
 
 The local test fixtures live under `db/test-schema-v1.1` and `db/test-schema-v1.2`. They intentionally differ so migration generation has real additive schema changes to process.
 
+For ODB runtime tests, also provide backend connection strings:
+
+```bash
+cmake -S . -B build-tests \
+  -DBUILD_TESTING=ON \
+  -DDB_SCHEMA_DIR_TO_GENERATE=test-schema-v1.1 \
+  -DCPPBESSOT_ODB_TEST_SQLITE_CONNSTR=/tmp/cppbessot-odb-test.sqlite \
+  -DCPPBESSOT_ODB_TEST_PGSQL_CONNSTR="host=127.0.0.1 port=5432 dbname=cppbessot_test user=postgres password=postgres"
+cmake --build build-tests --target cpp_odb_orm_sqlite_test_schema_v1_1
+cmake --build build-tests --target cpp_odb_orm_pgsql_test_schema_v1_1
+ctest --test-dir build-tests --output-on-failure
+```
+
+Use a dedicated PostgreSQL test database. The ODB runtime tests recreate the schema.
+The ODB runtime tests also verify hydration from ORM query result sets by persisting multiple rows, querying them back through `odb::result<T>`, and asserting that distinct field values are materialized correctly for both SQLite and PostgreSQL.
+The configured CMake connstring values are baked into the test binaries as defaults, so direct binary execution works without exporting environment variables first. If the matching environment variable is set at runtime, it still overrides the compiled default.
+
 ### 3) Link generated libraries
 
 ```cmake
