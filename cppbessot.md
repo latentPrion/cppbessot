@@ -65,7 +65,7 @@ All CMake files are located in the submodule directory. The entry point is `CppB
 
 ### Target: `db_gen_orm_serdes_and_zod`
 
-* **Variable**: `-DDB_SCHEMA_VERSION_TO_GENERATE="v1"`
+* **Variable**: `-DDB_SCHEMA_DIR_TO_GENERATE="v1"`
 * **Sub-targets** (One for each `generated-*` folder):
 1. `db_gen_ts`: `openapi-generator-cli` -> TS types.
 2. `db_gen_zod`: `openapi-zod-client --export-schemas` -> Zod schemas.
@@ -77,13 +77,13 @@ All CMake files are located in the submodule directory. The entry point is `CppB
 
 ### Target: `db_gen_migrations`
 
-* **Variables**: `-DDB_SCHEMA_MIGRATION_VERSION_FROM="v1"` and `-DDB_SCHEMA_MIGRATION_VERSION_TO="v2"`
+* **Variables**: `-DDB_SCHEMA_DIR_MIGRATION_FROM="v1"` and `-DDB_SCHEMA_DIR_MIGRATION_TO="v2"`
 * **Action**: Uses ODB's Schema Evolution engine to compare headers in `FROM` vs `TO`.
 * **Output**: SQL migration scripts for both SQLite and PostgreSQL.
 
 ### Target: `db_gen_sql_ddl`
 
-* **Variable**: `-DDB_SCHEMA_VERSION_TO_GENERATE="v1"`
+* **Variable**: `-DDB_SCHEMA_DIR_TO_GENERATE="v1"`
 * **Action**: Runs ODB schema generation for each supported backend for the selected version.
 * **Output**: Backend-specific SQL DDL under `${CPPBESSOT_WORKDIR}/v1/generated-sql-ddl/` (for example `sqlite/` and `postgre/`).
 
@@ -268,8 +268,8 @@ The ideal thing is that I have a folder structure like this:
 The content in the generated-* subdirs will be added to git version control. The goal is to have them generated once on each schema change, and then accessible thereafter forever. So generating the content in the generated-* subdirs is not a standard build step. It's a separate build/make target which the dev must run manually when xe updates the schema. Perhaps we could have a build system step that checks the `git diff` or `git status`, and if any files under the db/ subdir have been changed, we have CMake print a warning, advising the dev to create a new version and re-run the generation targets.
 
 There are 2 targets we want for the build system:
-1. Generate all generated-* content in the generated-* subdirs of the v<N> subdir. The name of the "v<N>" subdir is supplied via CMake -DDB_SCHEMA_VERSION_TO_GENERATE="<version_folder_name>". The name of the target that runs this should be "db_gen_orm_serdes_and_zod".
-2. This one should be basically agnostic of what the "current version" is, because it should be supplied with 2 input arguments via -DDB_SCHEMA_MIGRATION_VERSION_FROM="<from_version_folder_name>" and -DDB_SCHEMA_MIGRATION_VERSION_TO="<to_version_folder_name>". It should then output the migrations required to go from <from> to <to> inside of /db/migrations/v<from>-v<to>/. This build target's name should be "db_gen_migrations".
+1. Generate all generated-* content in the generated-* subdirs of the selected schema dir. The schema dir basename is supplied via CMake `-DDB_SCHEMA_DIR_TO_GENERATE="<schema_dir_name>"`. The name of the target that runs this should be `db_gen_orm_serdes_and_zod`.
+2. This one should be basically agnostic of what the "current version" is, because it should be supplied with 2 input arguments via `-DDB_SCHEMA_DIR_MIGRATION_FROM="<from_schema_dir_name>"` and `-DDB_SCHEMA_DIR_MIGRATION_TO="<to_schema_dir_name>"`. It should then output the migrations required to go from `<from>` to `<to>` inside of `/db/migrations/<from>-<to>/`. This build target's name should be `db_gen_migrations`.
 
 The name of the target that checks for git-tracked changes in the db/ subdir should be "db_check_schema_changes".
 
