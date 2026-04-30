@@ -4,6 +4,24 @@ include("${CMAKE_CURRENT_LIST_DIR}/dbGenerationCommon.cmake")
 include(CheckIncludeFileCXX)
 include(CMakePushCheckState)
 
+function(_cppbessot_publish_dependency_outputs)
+  set(CPPBESSOT_ODB_EXECUTABLE "${CPPBESSOT_ODB_EXECUTABLE}" PARENT_SCOPE)
+  set(CPPBESSOT_NPX_EXECUTABLE "${CPPBESSOT_NPX_EXECUTABLE}" PARENT_SCOPE)
+  set(CPPBESSOT_NPM_EXECUTABLE "${CPPBESSOT_NPM_EXECUTABLE}" PARENT_SCOPE)
+  set(CPPBESSOT_JAVA_EXECUTABLE "${CPPBESSOT_JAVA_EXECUTABLE}" PARENT_SCOPE)
+  set(CPPBESSOT_GIT_EXECUTABLE "${CPPBESSOT_GIT_EXECUTABLE}" PARENT_SCOPE)
+  set(CPPBESSOT_SQLITE3_EXECUTABLE "${CPPBESSOT_SQLITE3_EXECUTABLE}" PARENT_SCOPE)
+  set(CPPBESSOT_PSQL_EXECUTABLE "${CPPBESSOT_PSQL_EXECUTABLE}" PARENT_SCOPE)
+  set(CPPBESSOT_ODB_RUNTIME_LIB "${CPPBESSOT_ODB_RUNTIME_LIB}" PARENT_SCOPE)
+  set(CPPBESSOT_ODB_SQLITE_RUNTIME_LIB "${CPPBESSOT_ODB_SQLITE_RUNTIME_LIB}" PARENT_SCOPE)
+  set(CPPBESSOT_ODB_PGSQL_RUNTIME_LIB "${CPPBESSOT_ODB_PGSQL_RUNTIME_LIB}" PARENT_SCOPE)
+  set(CPPBESSOT_SQLITE_INCLUDE_DIR "${CPPBESSOT_SQLITE_INCLUDE_DIR}" PARENT_SCOPE)
+  set(CPPBESSOT_PGSQL_INCLUDE_DIR "${CPPBESSOT_PGSQL_INCLUDE_DIR}" PARENT_SCOPE)
+  set(CPPBESSOT_SQLITE_CLIENT_LIB "${CPPBESSOT_SQLITE_CLIENT_LIB}" PARENT_SCOPE)
+  set(CPPBESSOT_PGSQL_CLIENT_LIB "${CPPBESSOT_PGSQL_CLIENT_LIB}" PARENT_SCOPE)
+  set(CPPBESSOT_OPENAPI_ZOD_AVAILABLE TRUE PARENT_SCOPE)
+endfunction()
+
 function(_cppbessot_require_program var_name program_name hint)
   # Purpose: Locate an executable and fail with a clear install hint if missing.
   # Inputs:
@@ -64,6 +82,7 @@ function(_cppbessot_require_npx_package_executable npx_executable package_execut
   #   - No return value; raises FATAL_ERROR if execution fails.
   execute_process(
     COMMAND "${npx_executable}" --no-install "${package_executable}" --help
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
     RESULT_VARIABLE _help_result
     OUTPUT_QUIET
     ERROR_VARIABLE _help_stderr
@@ -76,6 +95,7 @@ function(_cppbessot_require_npx_package_executable npx_executable package_execut
   # Some CLIs return non-zero for --help; verify with version as fallback.
   execute_process(
     COMMAND "${npx_executable}" --no-install "${package_executable}" version
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
     RESULT_VARIABLE _version_result
     OUTPUT_QUIET
     ERROR_VARIABLE _version_stderr
@@ -101,6 +121,12 @@ function(cppbessot_check_dependencies)
   #   - CPPBESSOT_GIT_EXECUTABLE (PARENT_SCOPE)
   #   - CPPBESSOT_OPENAPI_ZOD_AVAILABLE (PARENT_SCOPE)
   #   - No return value; raises FATAL_ERROR on missing dependencies.
+  get_property(_cppbessot_dependencies_checked GLOBAL PROPERTY CPPBESSOT_DEPENDENCIES_CHECKED)
+  if(_cppbessot_dependencies_checked)
+    _cppbessot_publish_dependency_outputs()
+    return()
+  endif()
+
   _cppbessot_require_program(CPPBESSOT_ODB_EXECUTABLE odb
     "Install ODB compiler and ensure `odb` is in PATH.")
   _cppbessot_require_program(CPPBESSOT_NPX_EXECUTABLE npx
@@ -111,6 +137,10 @@ function(cppbessot_check_dependencies)
     "Install a Java runtime (OpenAPI generator uses Java).")
   _cppbessot_require_program(CPPBESSOT_GIT_EXECUTABLE git
     "Install Git and ensure it is available in PATH.")
+  _cppbessot_require_program(CPPBESSOT_SQLITE3_EXECUTABLE sqlite3
+    "Install the SQLite CLI so live SQLite DB actions can apply SQL files.")
+  _cppbessot_require_program(CPPBESSOT_PSQL_EXECUTABLE psql
+    "Install the PostgreSQL client CLI so live PostgreSQL DB actions can run.")
 
   _cppbessot_require_npm_package("${CPPBESSOT_NPM_EXECUTABLE}" "@openapitools/openapi-generator-cli")
   _cppbessot_require_npx_package_executable("${CPPBESSOT_NPX_EXECUTABLE}" "@openapitools/openapi-generator-cli")
@@ -187,17 +217,6 @@ function(cppbessot_check_dependencies)
       "PostgreSQL client library was not found. On Ubuntu/Debian install package `libpq-dev`.")
   endif()
 
-  set(CPPBESSOT_ODB_EXECUTABLE "${CPPBESSOT_ODB_EXECUTABLE}" PARENT_SCOPE)
-  set(CPPBESSOT_NPX_EXECUTABLE "${CPPBESSOT_NPX_EXECUTABLE}" PARENT_SCOPE)
-  set(CPPBESSOT_NPM_EXECUTABLE "${CPPBESSOT_NPM_EXECUTABLE}" PARENT_SCOPE)
-  set(CPPBESSOT_JAVA_EXECUTABLE "${CPPBESSOT_JAVA_EXECUTABLE}" PARENT_SCOPE)
-  set(CPPBESSOT_GIT_EXECUTABLE "${CPPBESSOT_GIT_EXECUTABLE}" PARENT_SCOPE)
-  set(CPPBESSOT_ODB_RUNTIME_LIB "${CPPBESSOT_ODB_RUNTIME_LIB}" PARENT_SCOPE)
-  set(CPPBESSOT_ODB_SQLITE_RUNTIME_LIB "${CPPBESSOT_ODB_SQLITE_RUNTIME_LIB}" PARENT_SCOPE)
-  set(CPPBESSOT_ODB_PGSQL_RUNTIME_LIB "${CPPBESSOT_ODB_PGSQL_RUNTIME_LIB}" PARENT_SCOPE)
-  set(CPPBESSOT_SQLITE_INCLUDE_DIR "${CPPBESSOT_SQLITE_INCLUDE_DIR}" PARENT_SCOPE)
-  set(CPPBESSOT_PGSQL_INCLUDE_DIR "${CPPBESSOT_PGSQL_INCLUDE_DIR}" PARENT_SCOPE)
-  set(CPPBESSOT_SQLITE_CLIENT_LIB "${CPPBESSOT_SQLITE_CLIENT_LIB}" PARENT_SCOPE)
-  set(CPPBESSOT_PGSQL_CLIENT_LIB "${CPPBESSOT_PGSQL_CLIENT_LIB}" PARENT_SCOPE)
-  set(CPPBESSOT_OPENAPI_ZOD_AVAILABLE TRUE PARENT_SCOPE)
+  set_property(GLOBAL PROPERTY CPPBESSOT_DEPENDENCIES_CHECKED TRUE)
+  _cppbessot_publish_dependency_outputs()
 endfunction()

@@ -9,6 +9,9 @@ include("${CMAKE_CURRENT_LIST_DIR}/dbGenCpp.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/dbGenODB.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/dbGenSqlDDL.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/dbGenMigrations.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/dbActionCommon.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/dbActionCreateFrom.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/dbActionMigrate.cmake")
 
 if(NOT DEFINED CPPBESSOT_WORKDIR)
   set(CPPBESSOT_WORKDIR "db" CACHE STRING "CppBeSSOT schema root folder")
@@ -31,6 +34,41 @@ endif()
 if(NOT DEFINED DB_SCHEMA_CHANGES_ARE_ERROR)
   option(DB_SCHEMA_CHANGES_ARE_ERROR "Treat dirty schema changes as hard CMake error" OFF)
 endif()
+
+if(NOT DEFINED DB_TARGET)
+  set(DB_TARGET "dev" CACHE STRING "Live DB target to act on: prod, proddev, or dev")
+endif()
+
+if(NOT DEFINED DB_CREATEFROM_SCHEMA_DIR)
+  set(DB_CREATEFROM_SCHEMA_DIR "${DB_SCHEMA_DIR_TO_GENERATE}" CACHE STRING
+    "Schema directory basename under CPPBESSOT_WORKDIR to create a live DB from")
+endif()
+
+if(NOT DEFINED DB_MIGRATE_WITH)
+  set(DB_MIGRATE_WITH "" CACHE STRING
+    "Migration directory basename under CPPBESSOT_WORKDIR/migrations to apply to the selected DB target")
+endif()
+
+if(NOT DEFINED DB_MIGRATE_PRODDEV_USE_STALE)
+  option(DB_MIGRATE_PRODDEV_USE_STALE "Reuse an existing stale proddev clone instead of recloning from prod" OFF)
+endif()
+
+set(CPPBESSOT_DB_SQLITE_PROD_PATH "${CPPBESSOT_DB_SQLITE_PROD_PATH}" CACHE STRING
+  "Parent-supplied SQLite DB path for DB_TARGET=prod")
+set(CPPBESSOT_DB_SQLITE_DEV_PATH "${CPPBESSOT_DB_SQLITE_DEV_PATH}" CACHE STRING
+  "Parent-supplied SQLite DB path for DB_TARGET=dev")
+set(CPPBESSOT_DB_SQLITE_PRODDEV_PATH "${CPPBESSOT_DB_SQLITE_PRODDEV_PATH}" CACHE STRING
+  "Parent-supplied SQLite DB path for DB_TARGET=proddev")
+set(CPPBESSOT_DB_PGSQL_PROD_CONNSTR "${CPPBESSOT_DB_PGSQL_PROD_CONNSTR}" CACHE STRING
+  "Parent-supplied PostgreSQL connection string for DB_TARGET=prod")
+set(CPPBESSOT_DB_PGSQL_DEV_CONNSTR "${CPPBESSOT_DB_PGSQL_DEV_CONNSTR}" CACHE STRING
+  "Parent-supplied PostgreSQL connection string for DB_TARGET=dev")
+set(CPPBESSOT_DB_PGSQL_PRODDEV_CONNSTR "${CPPBESSOT_DB_PGSQL_PRODDEV_CONNSTR}" CACHE STRING
+  "Parent-supplied PostgreSQL connection string for DB_TARGET=proddev")
+set(CPPBESSOT_DB_SQLITE_CLONE_PROD_TO_PRODDEV_COMMAND "${CPPBESSOT_DB_SQLITE_CLONE_PROD_TO_PRODDEV_COMMAND}" CACHE STRING
+  "Parent-supplied command string that clones the prod SQLite DB into proddev")
+set(CPPBESSOT_DB_PGSQL_CLONE_PROD_TO_PRODDEV_COMMAND "${CPPBESSOT_DB_PGSQL_CLONE_PROD_TO_PRODDEV_COMMAND}" CACHE STRING
+  "Parent-supplied command string that clones the prod PostgreSQL DB into proddev")
 
 if(NOT DEFINED CPPBESSOT_AUTO_ENABLE)
   option(CPPBESSOT_AUTO_ENABLE "Auto-register CppBeSSOT targets when this file is included" ON)
@@ -218,6 +256,8 @@ function(cppbessot_enable)
   #       - db_gen_sql_ddl
   #       - db_gen_migrations
   #       - db_gen_orm_serdes_and_zod
+  #       - db_createfrom
+  #       - db_migrate
   #   - Generated library targets for selected schema version.
   cppbessot_initialize_paths()
 
@@ -261,6 +301,8 @@ VERBATIM
     db_gen_sql_ddl)
   set_target_properties(db_gen_orm_serdes_and_zod PROPERTIES EXCLUDE_FROM_ALL TRUE)
 
+  cppbessot_add_db_createfrom_target()
+  cppbessot_add_db_migrate_target()
   cppbessot_add_generated_libraries()
 endfunction()
 
