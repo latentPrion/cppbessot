@@ -38,6 +38,17 @@ function(_cppbessot_require_program var_name program_name hint)
   endif()
 endfunction()
 
+function(_cppbessot_any_nonempty_var out_var)
+  foreach(_var_name IN LISTS ARGN)
+    if(DEFINED ${_var_name} AND NOT "${${_var_name}}" STREQUAL "")
+      set(${out_var} TRUE PARENT_SCOPE)
+      return()
+    endif()
+  endforeach()
+
+  set(${out_var} FALSE PARENT_SCOPE)
+endfunction()
+
 function(_cppbessot_require_npm_package npm_executable package_name)
   # Purpose: Ensure an npm package exists either locally in PROJECT_SOURCE_DIR
   #          or globally in the active npm installation.
@@ -139,8 +150,18 @@ function(cppbessot_check_dependencies)
     "Install Git and ensure it is available in PATH.")
   _cppbessot_require_program(CPPBESSOT_SQLITE3_EXECUTABLE sqlite3
     "Install the SQLite CLI so live SQLite DB actions can apply SQL files.")
-  _cppbessot_require_program(CPPBESSOT_PSQL_EXECUTABLE psql
-    "Install the PostgreSQL client CLI so live PostgreSQL DB actions can run.")
+  _cppbessot_any_nonempty_var(
+    _cppbessot_require_psql
+    CPPBESSOT_DB_PGSQL_PROD_CONNSTR
+    CPPBESSOT_DB_PGSQL_DEV_CONNSTR
+    CPPBESSOT_DB_PGSQL_PRODDEV_CONNSTR
+    CPPBESSOT_DB_ACTION_TEST_PGSQL_ADMIN_CONNSTR)
+  if(_cppbessot_require_psql)
+    _cppbessot_require_program(CPPBESSOT_PSQL_EXECUTABLE psql
+      "Install the PostgreSQL client CLI so live PostgreSQL DB actions can run.")
+  else()
+    set(CPPBESSOT_PSQL_EXECUTABLE "")
+  endif()
 
   _cppbessot_require_npm_package("${CPPBESSOT_NPM_EXECUTABLE}" "@openapitools/openapi-generator-cli")
   _cppbessot_require_npx_package_executable("${CPPBESSOT_NPX_EXECUTABLE}" "@openapitools/openapi-generator-cli")
