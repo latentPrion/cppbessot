@@ -21,4 +21,3 @@ Be very aggressive about splitting and isolating code into common subfunctions a
 ----
 That sqlite_apply.py script: can it be done as a bash script instead?
 I'd prefer to add the sqlite3 cli to the project's CMake find_* targets, than to add python unnecessarily.
-

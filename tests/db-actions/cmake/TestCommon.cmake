@@ -20,6 +20,10 @@ function(cppbessot_test_write_file path)
   file(WRITE "${path}" "${_content}")
 endfunction()
 
+function(cppbessot_test_cache_string_setting out_var var_name value)
+  set(${out_var} "set(${var_name} \"${value}\" CACHE STRING \"\")\n" PARENT_SCOPE)
+endfunction()
+
 function(cppbessot_test_write_shell_script path)
   cppbessot_test_write_file("${path}" ${ARGN})
   execute_process(COMMAND chmod +x "${path}")
@@ -154,6 +158,183 @@ function(cppbessot_test_set_path_with_tool_dir tool_dir)
   else()
     set(ENV{PATH} "${tool_dir}")
   endif()
+endfunction()
+
+function(cppbessot_test_has_real_pgsql_support out_var)
+  find_program(_psql psql)
+  if(_psql AND DEFINED CPPBESSOT_DB_ACTION_TEST_PGSQL_ADMIN_CONNSTR
+     AND NOT "${CPPBESSOT_DB_ACTION_TEST_PGSQL_ADMIN_CONNSTR}" STREQUAL "")
+    set(${out_var} TRUE PARENT_SCOPE)
+  else()
+    set(${out_var} FALSE PARENT_SCOPE)
+  endif()
+endfunction()
+
+function(cppbessot_test_require_real_pgsql_support)
+  cppbessot_test_has_real_pgsql_support(_has_support)
+  if(NOT _has_support)
+    message(FATAL_ERROR
+      "Real PostgreSQL db-action test support requires `psql` and CPPBESSOT_DB_ACTION_TEST_PGSQL_ADMIN_CONNSTR.")
+  endif()
+endfunction()
+
+function(cppbessot_test_pgsql_exec connstr sql_text)
+  find_program(_psql psql REQUIRED)
+  execute_process(
+    COMMAND "${_psql}" "${connstr}" -v ON_ERROR_STOP=1 -c "${sql_text}"
+    RESULT_VARIABLE _result
+    OUTPUT_VARIABLE _stdout
+    ERROR_VARIABLE _stderr
+  )
+  if(NOT _result EQUAL 0)
+    message(FATAL_ERROR "Failed PostgreSQL SQL execution.\n${_stdout}\n${_stderr}")
+  endif()
+endfunction()
+
+function(cppbessot_test_pgsql_exec_file connstr sql_file)
+  find_program(_psql psql REQUIRED)
+  execute_process(
+    COMMAND "${_psql}" "${connstr}" -v ON_ERROR_STOP=1 -f "${sql_file}"
+    RESULT_VARIABLE _result
+    OUTPUT_VARIABLE _stdout
+    ERROR_VARIABLE _stderr
+  )
+  if(NOT _result EQUAL 0)
+    message(FATAL_ERROR "Failed PostgreSQL SQL file execution for `${sql_file}`.\n${_stdout}\n${_stderr}")
+  endif()
+endfunction()
+
+function(cppbessot_test_pgsql_query_scalar out_var connstr query)
+  find_program(_psql psql REQUIRED)
+  execute_process(
+    COMMAND "${_psql}" "${connstr}" -v ON_ERROR_STOP=1 -t -A -c "${query}"
+    RESULT_VARIABLE _result
+    OUTPUT_VARIABLE _stdout
+    ERROR_VARIABLE _stderr
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+  )
+  if(NOT _result EQUAL 0)
+    message(FATAL_ERROR "Failed PostgreSQL query.\n${_stderr}")
+  endif()
+  string(STRIP "${_stdout}" _value)
+  set(${out_var} "${_value}" PARENT_SCOPE)
+endfunction()
+
+function(cppbessot_test_pgsql_connstr_dbname out_var connstr)
+  string(REGEX MATCH "(^|[ \t])dbname=([^ \t]+)" _match " ${connstr}")
+  if("${CMAKE_MATCH_2}" STREQUAL "")
+    message(FATAL_ERROR "Expected PostgreSQL connstr to include dbname=... but got `${connstr}`.")
+  endif()
+  set(${out_var} "${CMAKE_MATCH_2}" PARENT_SCOPE)
+endfunction()
+
+function(cppbessot_test_pgsql_connstr_replace_dbname out_var connstr new_dbname)
+  cppbessot_test_pgsql_connstr_dbname(_old_dbname "${connstr}")
+  string(REGEX REPLACE "(^|[ \t])dbname=[^ \t]+" "\\1dbname=${new_dbname}" _updated " ${connstr}")
+  string(STRIP "${_updated}" _updated)
+  set(${out_var} "${_updated}" PARENT_SCOPE)
+endfunction()
+
+function(cppbessot_test_pgsql_unique_dbname out_var role_suffix)
+  cppbessot_test_require_var(CPPBESSOT_TEST_NAME)
+  cppbessot_test_require_var(CPPBESSOT_TEST_BINARY_DIR)
+  string(TOLOWER "${CPPBESSOT_TEST_NAME}" _base)
+  string(REGEX REPLACE "[^a-z0-9]+" "_" _base "${_base}")
+  string(REGEX REPLACE "^_+|_+$" "" _base "${_base}")
+  if("${_base}" STREQUAL "")
+    set(_base "db_action_test")
+  endif()
+  string(TOLOWER "${role_suffix}" _role)
+  string(REGEX REPLACE "[^a-z0-9]+" "_" _role "${_role}")
+  string(REGEX REPLACE "^_+|_+$" "" _role "${_role}")
+  string(SHA256 _scope_hash "${CPPBESSOT_TEST_BINARY_DIR}")
+  string(SUBSTRING "${_scope_hash}" 0 8 _scope_suffix)
+  set(${out_var} "cppbessot_${_base}_${_role}_${_scope_suffix}" PARENT_SCOPE)
+endfunction()
+
+function(cppbessot_test_pgsql_isolated_connstr out_var base_connstr role_suffix)
+  cppbessot_test_pgsql_unique_dbname(_dbname "${role_suffix}")
+  cppbessot_test_pgsql_connstr_replace_dbname(_updated "${base_connstr}" "${_dbname}")
+  set(${out_var} "${_updated}" PARENT_SCOPE)
+endfunction()
+
+function(cppbessot_test_pgsql_escape_identifier out_var identifier)
+  string(REPLACE "\"" "\"\"" _escaped "${identifier}")
+  set(${out_var} "\"${_escaped}\"" PARENT_SCOPE)
+endfunction()
+
+function(cppbessot_test_pgsql_escape_literal out_var literal)
+  string(REPLACE "'" "''" _escaped "${literal}")
+  set(${out_var} "'${_escaped}'" PARENT_SCOPE)
+endfunction()
+
+function(cppbessot_test_pgsql_drop_database connstr)
+  cppbessot_test_require_real_pgsql_support()
+  cppbessot_test_pgsql_connstr_dbname(_dbname "${connstr}")
+  cppbessot_test_pgsql_escape_identifier(_db_ident "${_dbname}")
+  cppbessot_test_pgsql_escape_literal(_db_lit "${_dbname}")
+  cppbessot_test_pgsql_exec(
+    "${CPPBESSOT_DB_ACTION_TEST_PGSQL_ADMIN_CONNSTR}"
+    "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = ${_db_lit} AND pid <> pg_backend_pid();")
+  cppbessot_test_pgsql_exec(
+    "${CPPBESSOT_DB_ACTION_TEST_PGSQL_ADMIN_CONNSTR}"
+    "DROP DATABASE IF EXISTS ${_db_ident};")
+endfunction()
+
+function(cppbessot_test_pgsql_create_database connstr)
+  cppbessot_test_require_real_pgsql_support()
+  cppbessot_test_pgsql_connstr_dbname(_dbname "${connstr}")
+  cppbessot_test_pgsql_escape_identifier(_db_ident "${_dbname}")
+  cppbessot_test_pgsql_exec(
+    "${CPPBESSOT_DB_ACTION_TEST_PGSQL_ADMIN_CONNSTR}"
+    "CREATE DATABASE ${_db_ident};")
+endfunction()
+
+function(cppbessot_test_pgsql_reset_database connstr)
+  cppbessot_test_pgsql_drop_database("${connstr}")
+  cppbessot_test_pgsql_create_database("${connstr}")
+endfunction()
+
+function(cppbessot_test_pgsql_clone_database source_connstr target_connstr)
+  cppbessot_test_require_real_pgsql_support()
+  cppbessot_test_pgsql_connstr_dbname(_source_db "${source_connstr}")
+  cppbessot_test_pgsql_connstr_dbname(_target_db "${target_connstr}")
+  cppbessot_test_pgsql_escape_identifier(_source_ident "${_source_db}")
+  cppbessot_test_pgsql_escape_identifier(_target_ident "${_target_db}")
+  cppbessot_test_pgsql_drop_database("${target_connstr}")
+  cppbessot_test_pgsql_exec(
+    "${CPPBESSOT_DB_ACTION_TEST_PGSQL_ADMIN_CONNSTR}"
+    "CREATE DATABASE ${_target_ident} TEMPLATE ${_source_ident};")
+endfunction()
+
+function(cppbessot_test_shell_single_quote out_var text)
+  string(REPLACE "'" "'\"'\"'" _quoted "${text}")
+  set(${out_var} "'${_quoted}'" PARENT_SCOPE)
+endfunction()
+
+function(cppbessot_test_pgsql_clone_command out_var source_connstr target_connstr)
+  cppbessot_test_require_real_pgsql_support()
+  cppbessot_test_pgsql_connstr_dbname(_source_db "${source_connstr}")
+  cppbessot_test_pgsql_connstr_dbname(_target_db "${target_connstr}")
+  cppbessot_test_pgsql_escape_identifier(_source_ident "${_source_db}")
+  cppbessot_test_pgsql_escape_identifier(_target_ident "${_target_db}")
+  cppbessot_test_pgsql_escape_literal(_source_lit "${_source_db}")
+  cppbessot_test_pgsql_escape_literal(_target_lit "${_target_db}")
+  cppbessot_test_shell_single_quote(_admin_shell "${CPPBESSOT_DB_ACTION_TEST_PGSQL_ADMIN_CONNSTR}")
+  cppbessot_test_shell_single_quote(
+    _term_target_shell
+    "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = ${_target_lit} AND pid <> pg_backend_pid();")
+  cppbessot_test_shell_single_quote(
+    _term_source_shell
+    "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = ${_source_lit} AND pid <> pg_backend_pid();")
+  cppbessot_test_shell_single_quote(_drop_shell "DROP DATABASE IF EXISTS ${_target_ident};")
+  cppbessot_test_shell_single_quote(_create_shell "CREATE DATABASE ${_target_ident} TEMPLATE ${_source_ident};")
+  set(${out_var}
+    "psql ${_admin_shell} -v ON_ERROR_STOP=1 -c ${_term_target_shell} && "
+    "psql ${_admin_shell} -v ON_ERROR_STOP=1 -c ${_term_source_shell} && "
+    "psql ${_admin_shell} -v ON_ERROR_STOP=1 -c ${_drop_shell} && "
+    "psql ${_admin_shell} -v ON_ERROR_STOP=1 -c ${_create_shell}"
+    PARENT_SCOPE)
 endfunction()
 
 function(cppbessot_test_sqlite_exec db_path sql_text)
