@@ -1,6 +1,5 @@
 include_guard(GLOBAL)
 
-include(CMakeParseArguments)
 include("${CMAKE_CURRENT_LIST_DIR}/dbGenerationCommon.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/dbDependencyCheck.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/dbSchemaCheck.cmake")
@@ -45,6 +44,20 @@ function(_cppbessot_try_link_nlohmann target_name)
   #   - Modifies target link interface; no-op when package target is absent.
   if(TARGET nlohmann_json::nlohmann_json)
     target_link_libraries(${target_name} PUBLIC nlohmann_json::nlohmann_json)
+  endif()
+endfunction()
+
+function(_cppbessot_assert_generation_targets_registered consumer_name)
+  # Purpose: Ensure split public library registration functions are only used
+  #          after generation targets are registered (typically via cppbessot_enable()).
+  # Inputs:
+  #   - consumer_name: Human-readable function name for diagnostics.
+  # Outputs:
+  #   - No return value; raises FATAL_ERROR when prerequisites are missing.
+  if(NOT TARGET db_gen_cpp_headers OR NOT TARGET db_gen_odb_logic OR NOT TARGET db_gen_sql_ddl)
+    message(FATAL_ERROR
+      "${consumer_name} requires generation targets to be registered first. "
+      "Call cppbessot_enable() before invoking split generated-library registration functions.")
   endif()
 endfunction()
 
@@ -111,42 +124,52 @@ function(_cppbessot_add_generated_pgsql_library
   add_library(cppbessot::odb_pgsql ALIAS cppBeSsotOdbPgSql)
 endfunction()
 
-function(cppbessot_add_generated_libraries)
-  # Purpose: Create consumable libraries from generated model and ODB sources.
+function(cppbessot_add_generated_cpp_model_libraries)
+  # Purpose: Create consumable C++ model library from generated model sources.
   # Inputs:
-  #   - SCHEMA_DIR (optional named arg): Schema directory basename to consume.
-  #   - DB_SCHEMA_DIR_TO_GENERATE (fallback): Default schema directory basename.
+  #   - DB_SCHEMA_DIR_TO_GENERATE: Schema directory basename under CPPBESSOT_WORKDIR.
   # Outputs:
-  #   - Library targets (when sources exist):
+  #   - Library target:
   #       - cppBeSsotOpenAiModelGen
-  #       - cppBeSsotOdbSqlite
-  #       - cppBeSsotOdbPgSql
-  #   - Alias targets:
+  #   - Alias target:
   #       - cppbessot::openai_model_gen
-  #       - cppbessot::odb_sqlite
-  #       - cppbessot::odb_pgsql
-  #   - Emits warnings if expected source sets are missing.
-  set(options)
-  set(one_value_args SCHEMA_DIR)
-  set(multi_value_args)
-  cmake_parse_arguments(CPPB "${options}" "${one_value_args}" "${multi_value_args}" ${ARGN})
-
-  if(NOT CPPB_SCHEMA_DIR)
-    set(CPPB_SCHEMA_DIR "${DB_SCHEMA_DIR_TO_GENERATE}")
-  endif()
-
-  cppbessot_validate_schema_dir_name("${CPPB_SCHEMA_DIR}")
-  cppbessot_get_schema_dir_path(_version_dir "${CPPB_SCHEMA_DIR}")
-
+  _cppbessot_assert_generation_targets_registered("cppbessot_add_generated_cpp_model_libraries")
+  cppbessot_validate_schema_dir_name("${DB_SCHEMA_DIR_TO_GENERATE}")
+  cppbessot_get_schema_dir_path(_version_dir "${DB_SCHEMA_DIR_TO_GENERATE}")
   set(_cpp_include_dir "${_version_dir}/generated-cpp-source/include")
-  set(_model_leaf_include_dir "${_cpp_include_dir}/cppbessot/model")
-  cppbessot_get_expected_cpp_model_outputs(_expected_model_headers _expected_model_sources "${CPPB_SCHEMA_DIR}")
-  cppbessot_get_expected_odb_outputs(_expected_sqlite_odb_sources _expected_pgsql_odb_sources "${CPPB_SCHEMA_DIR}")
+  cppbessot_get_expected_cpp_model_outputs(
+    _expected_model_headers
+    _expected_model_sources
+    "${DB_SCHEMA_DIR_TO_GENERATE}")
 
   _cppbessot_add_generated_model_library(
     "${_cpp_include_dir}"
     "${_expected_model_headers}"
     "${_expected_model_sources}")
+endfunction()
+
+function(cppbessot_add_generated_odb_libraries)
+  # Purpose: Create consumable ODB libraries from generated ODB sources.
+  # Inputs:
+  #   - DB_SCHEMA_DIR_TO_GENERATE: Schema directory basename under CPPBESSOT_WORKDIR.
+  # Outputs:
+  #   - Library targets:
+  #       - cppBeSsotOdbSqlite
+  #       - cppBeSsotOdbPgSql
+  #   - Alias targets:
+  #       - cppbessot::odb_sqlite
+  #       - cppbessot::odb_pgsql
+  _cppbessot_assert_generation_targets_registered("cppbessot_add_generated_odb_libraries")
+  cppbessot_validate_schema_dir_name("${DB_SCHEMA_DIR_TO_GENERATE}")
+  cppbessot_get_schema_dir_path(_version_dir "${DB_SCHEMA_DIR_TO_GENERATE}")
+
+  set(_cpp_include_dir "${_version_dir}/generated-cpp-source/include")
+  set(_model_leaf_include_dir "${_cpp_include_dir}/cppbessot/model")
+  cppbessot_get_expected_odb_outputs(
+    _expected_sqlite_odb_sources
+    _expected_pgsql_odb_sources
+    "${DB_SCHEMA_DIR_TO_GENERATE}")
+
   _cppbessot_add_generated_sqlite_library(
     "${_cpp_include_dir}"
     "${_model_leaf_include_dir}"
@@ -157,6 +180,23 @@ function(cppbessot_add_generated_libraries)
     "${_model_leaf_include_dir}"
     "${_version_dir}"
     "${_expected_pgsql_odb_sources}")
+endfunction()
+
+function(cppbessot_add_generated_libraries)
+  # Purpose: Create consumable libraries from generated model and ODB sources.
+  # Inputs:
+  #   - DB_SCHEMA_DIR_TO_GENERATE: Schema directory basename under CPPBESSOT_WORKDIR.
+  # Outputs:
+  #   - Library targets (when sources exist):
+  #       - cppBeSsotOpenAiModelGen
+  #       - cppBeSsotOdbSqlite
+  #       - cppBeSsotOdbPgSql
+  #   - Alias targets:
+  #       - cppbessot::openai_model_gen
+  #       - cppbessot::odb_sqlite
+  #       - cppbessot::odb_pgsql
+  cppbessot_add_generated_cpp_model_libraries()
+  cppbessot_add_generated_odb_libraries()
 endfunction()
 
 function(cppbessot_enable)
@@ -183,6 +223,7 @@ function(cppbessot_enable)
 
   cppbessot_validate_schema_dir_name("${DB_SCHEMA_DIR_TO_GENERATE}")
   cppbessot_assert_schema_dir_exists("${DB_SCHEMA_DIR_TO_GENERATE}")
+  cppbessot_assert_openapi_exists("${DB_SCHEMA_DIR_TO_GENERATE}")
 
   cppbessot_check_dependencies()
 
@@ -206,7 +247,7 @@ function(cppbessot_enable)
       COMMAND "${CMAKE_COMMAND}" -E echo
               "Set DB_SCHEMA_DIR_MIGRATION_FROM and DB_SCHEMA_DIR_MIGRATION_TO to enable migration generation."
       COMMAND "${CMAKE_COMMAND}" -E false
-      VERBATIM
+VERBATIM
     )
     set_target_properties(db_gen_migrations PROPERTIES EXCLUDE_FROM_ALL TRUE)
   endif()
@@ -220,7 +261,7 @@ function(cppbessot_enable)
     db_gen_sql_ddl)
   set_target_properties(db_gen_orm_serdes_and_zod PROPERTIES EXCLUDE_FROM_ALL TRUE)
 
-  cppbessot_add_generated_libraries(SCHEMA_DIR "${DB_SCHEMA_DIR_TO_GENERATE}")
+  cppbessot_add_generated_libraries()
 endfunction()
 
 if(CPPBESSOT_AUTO_ENABLE)

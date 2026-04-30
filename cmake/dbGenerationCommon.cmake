@@ -92,6 +92,19 @@ function(cppbessot_assert_schema_dir_exists schema_dir)
   endif()
 endfunction()
 
+function(cppbessot_assert_openapi_exists schema_dir)
+  # Purpose: Assert that a schema directory's SSOT OpenAPI file exists on disk.
+  # Inputs:
+  #   - schema_dir: Schema directory basename.
+  # Outputs:
+  #   - No return value; raises FATAL_ERROR if file is missing.
+  cppbessot_get_schema_dir_path(_schema_dir_path "${schema_dir}")
+  set(_openapi_file "${_schema_dir_path}/openapi/openapi.yaml")
+  if(NOT EXISTS "${_openapi_file}")
+    message(FATAL_ERROR "OpenAPI file does not exist: ${_openapi_file}")
+  endif()
+endfunction()
+
 function(cppbessot_get_model_headers_glob out_var schema_dir)
   # Purpose: Build a model-header glob expression for a schema directory.
   # Inputs:
@@ -111,10 +124,8 @@ function(cppbessot_get_openapi_schema_names out_var schema_dir)
   # Outputs:
   #   - <out_var> (PARENT_SCOPE): List of top-level component schema names.
   cppbessot_get_schema_dir_path(_schema_dir_path "${schema_dir}")
+  cppbessot_assert_openapi_exists("${schema_dir}")
   set(_openapi_file "${_schema_dir_path}/openapi/openapi.yaml")
-  if(NOT EXISTS "${_openapi_file}")
-    message(FATAL_ERROR "OpenAPI file does not exist: ${_openapi_file}")
-  endif()
 
   file(STRINGS "${_openapi_file}" _openapi_lines)
   set(_schema_names)
