@@ -11,6 +11,10 @@ function(cppbessot_add_odb_orm_test backend target_suffix connstr_var source_fil
   endif()
 
   set(_target_name "cpp_odb_orm_${target_suffix}_${CPP_ODB_TEST_NAME_SUFFIX}")
+  set(_sql_backend_dir "${backend}")
+  if("${backend}" STREQUAL "pgsql")
+    set(_sql_backend_dir "postgre")
+  endif()
   add_executable(${_target_name} "${source_file}")
   add_dependencies(${_target_name} db_gen_sql_ddl)
   target_compile_features(${_target_name} PRIVATE cxx_std_20)
@@ -22,12 +26,12 @@ function(cppbessot_add_odb_orm_test backend target_suffix connstr_var source_fil
       GTest::gtest_main)
   target_compile_definitions(${_target_name}
     PRIVATE
-      CPPBESSOT_ODB_TEST_SQL_DIR="${PROJECT_SOURCE_DIR}/db/${DB_SCHEMA_DIR_TO_GENERATE}/generated-sql-ddl/${backend}"
+      CPPBESSOT_ODB_TEST_SQL_DIR="${PROJECT_SOURCE_DIR}/db/${DB_SCHEMA_DIR_TO_GENERATE}/generated-sql-ddl/${_sql_backend_dir}"
       ${connstr_var}_DEFAULT="${${connstr_var}}")
 
   if("${backend}" STREQUAL "sqlite")
     target_link_libraries(${_target_name} PRIVATE "${CPPBESSOT_SQLITE_CLIENT_LIB}")
-  elseif("${backend}" STREQUAL "postgre")
+  elseif("${backend}" STREQUAL "pgsql")
     target_include_directories(${_target_name} PRIVATE "${CPPBESSOT_PGSQL_INCLUDE_DIR}")
     target_link_libraries(${_target_name} PRIVATE "${CPPBESSOT_PGSQL_CLIENT_LIB}")
   endif()
