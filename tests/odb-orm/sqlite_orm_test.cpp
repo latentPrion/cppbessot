@@ -43,8 +43,8 @@ void apply_sqlite_ddl(const std::string& connstr)
 TEST(SqliteOdbOrm, PersistsLoadsQueriesAndErases)
 {
   const std::string connstr = cppbessot_env_or_default(
-    "CPPBESSOT_ODB_TEST_SQLITE_CONNSTR",
-    CPPBESSOT_ODB_TEST_SQLITE_CONNSTR_DEFAULT);
+    "CPPBESSOT_DB_SQLITE_PRODDEV_PATH",
+    CPPBESSOT_DB_SQLITE_PRODDEV_PATH_DEFAULT);
   std::filesystem::remove(connstr);
   apply_sqlite_ddl(connstr);
   odb::sqlite::database db(connstr, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);

@@ -11,7 +11,7 @@ The OpenAPI file under a schema directory is the single source of truth. From th
 - generate Zod schemas
 - generate SQL migration artifacts between two schema versions
 - build linkable generated C++ libraries
-- run live DB actions against `dev`, `prod`, or `proddev`
+- run live DB actions against `dev`, `prod`, `proddev`, or `tests`
 
 ## Repository Layout
 
@@ -79,14 +79,16 @@ When configuring the standalone `cppbessot` repo itself, `DB_SCHEMA_DIR_TO_GENER
 cmake -S cmake/cppbessot -B build-cppbessot -DDB_SCHEMA_DIR_TO_GENERATE=test-schema-v1.2
 ```
 
-The standalone top-level file also exposes these test-related cache variables:
+The standalone top-level file also exposes these DB target mapping cache variables:
 
-- `CPPBESSOT_ODB_TEST_SQLITE_CONNSTR`
-  - optional SQLite connection string for ODB runtime tests
-- `CPPBESSOT_ODB_TEST_PGSQL_CONNSTR`
-  - optional PostgreSQL conninfo string for ODB runtime tests
-- `CPPBESSOT_DB_ACTION_TEST_PGSQL_ADMIN_CONNSTR`
-  - optional PostgreSQL admin conninfo string used only by the real db-action test harness
+- `CPPBESSOT_DB_SQLITE_PROD_PATH`
+- `CPPBESSOT_DB_SQLITE_DEV_PATH`
+- `CPPBESSOT_DB_SQLITE_PRODDEV_PATH`
+- `CPPBESSOT_DB_SQLITE_TESTS_PATH`
+- `CPPBESSOT_DB_PGSQL_PROD_CONNSTR`
+- `CPPBESSOT_DB_PGSQL_DEV_CONNSTR`
+- `CPPBESSOT_DB_PGSQL_PRODDEV_CONNSTR`
+- `CPPBESSOT_DB_PGSQL_TESTS_CONNSTR`
 
 ## Embedding In A Parent Project
 
@@ -146,7 +148,7 @@ cppbessot_enable()
 - `DB_TARGET`
   - default: `dev`
   - selected live DB target for `db_createfrom` and `db_migrate`
-  - allowed values: `prod`, `proddev`, `dev`
+  - allowed values: `prod`, `proddev`, `dev`, `tests`
 
 - `DB_CREATEFROM_SCHEMA_DIR`
   - default: `DB_SCHEMA_DIR_TO_GENERATE`
@@ -168,16 +170,18 @@ Exactly one backend mapping must be set for the selected `DB_TARGET`.
 - `CPPBESSOT_DB_SQLITE_PROD_PATH`
 - `CPPBESSOT_DB_SQLITE_DEV_PATH`
 - `CPPBESSOT_DB_SQLITE_PRODDEV_PATH`
+- `CPPBESSOT_DB_SQLITE_TESTS_PATH`
 
-These point at the SQLite DB file to act on for `prod`, `dev`, or `proddev`.
+These point at the SQLite DB file to act on for `prod`, `dev`, `proddev`, or `tests`.
 
 ### PostgreSQL Live DB Mapping Variables
 
 - `CPPBESSOT_DB_PGSQL_PROD_CONNSTR`
 - `CPPBESSOT_DB_PGSQL_DEV_CONNSTR`
 - `CPPBESSOT_DB_PGSQL_PRODDEV_CONNSTR`
+- `CPPBESSOT_DB_PGSQL_TESTS_CONNSTR`
 
-These are `psql`-compatible PostgreSQL connection strings for `prod`, `dev`, or `proddev`.
+These are `psql`-compatible PostgreSQL connection strings for `prod`, `dev`, `proddev`, or `tests`.
 
 ### Prod-To-Proddev Clone Hook Variables
 
@@ -613,14 +617,14 @@ ctest --test-dir build-cppbessot-tests --output-on-failure
 
 ### ODB Runtime Tests
 
-Provide test DB connection strings:
+Provide DB target mappings:
 
 ```bash
 cmake -S cmake/cppbessot -B build-cppbessot-tests \
   -DBUILD_TESTING=ON \
   -DDB_SCHEMA_DIR_TO_GENERATE=test-schema-v1.2 \
-  -DCPPBESSOT_ODB_TEST_SQLITE_CONNSTR=/tmp/cppbessot-odb.sqlite \
-  -DCPPBESSOT_ODB_TEST_PGSQL_CONNSTR="host=127.0.0.1 port=5432 dbname=cppbessot_odb_test user=postgres password=postgres"
+  -DCPPBESSOT_DB_SQLITE_PRODDEV_PATH=/tmp/cppbessot-odb.sqlite \
+  -DCPPBESSOT_DB_PGSQL_PRODDEV_CONNSTR="host=127.0.0.1 port=5432 dbname=cppbessot_odb_test user=postgres password=postgres"
 ```
 
 ### Real PostgreSQL DB-Action Tests
@@ -629,7 +633,6 @@ These tests are only registered when all of the following are true:
 
 - `BUILD_TESTING=ON`
 - `psql` is available
-- `CPPBESSOT_DB_ACTION_TEST_PGSQL_ADMIN_CONNSTR` is non-empty
 - the required target connstr variables for the individual test are non-empty
 
 Example:
@@ -638,7 +641,6 @@ Example:
 cmake -S cmake/cppbessot -B build-cppbessot-tests \
   -DBUILD_TESTING=ON \
   -DDB_SCHEMA_DIR_TO_GENERATE=test-schema-v1.2 \
-  -DCPPBESSOT_DB_ACTION_TEST_PGSQL_ADMIN_CONNSTR="host=127.0.0.1 port=5432 dbname=postgres user=postgres password=postgres" \
   -DCPPBESSOT_DB_PGSQL_DEV_CONNSTR="host=127.0.0.1 port=5432 dbname=cppbessot_dev user=postgres password=postgres" \
   -DCPPBESSOT_DB_PGSQL_PROD_CONNSTR="host=127.0.0.1 port=5432 dbname=cppbessot_prod user=postgres password=postgres" \
   -DCPPBESSOT_DB_PGSQL_PRODDEV_CONNSTR="host=127.0.0.1 port=5432 dbname=cppbessot_proddev user=postgres password=postgres"

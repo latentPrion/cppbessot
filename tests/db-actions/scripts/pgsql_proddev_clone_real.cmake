@@ -1,10 +1,9 @@
 include("${CMAKE_CURRENT_LIST_DIR}/../cmake/TestCommon.cmake")
 
 cppbessot_test_require_real_pgsql_support()
-cppbessot_test_require_var(CPPBESSOT_DB_PGSQL_PROD_CONNSTR)
 cppbessot_test_require_var(CPPBESSOT_DB_PGSQL_PRODDEV_CONNSTR)
 cppbessot_test_case_dir(_case_dir)
-cppbessot_test_pgsql_isolated_connstr(_prod_connstr "${CPPBESSOT_DB_PGSQL_PROD_CONNSTR}" "prod")
+cppbessot_test_pgsql_isolated_connstr(_prod_connstr "${CPPBESSOT_DB_PGSQL_PRODDEV_CONNSTR}" "prod")
 cppbessot_test_pgsql_isolated_connstr(_proddev_connstr "${CPPBESSOT_DB_PGSQL_PRODDEV_CONNSTR}" "proddev")
 
 cppbessot_test_pgsql_reset_database("${_prod_connstr}")

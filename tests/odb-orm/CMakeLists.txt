@@ -40,13 +40,13 @@ endfunction()
 cppbessot_add_odb_orm_test(
   "sqlite"
   "sqlite"
-  CPPBESSOT_ODB_TEST_SQLITE_CONNSTR
+  CPPBESSOT_DB_SQLITE_PRODDEV_PATH
   "${CMAKE_CURRENT_SOURCE_DIR}/sqlite_orm_test.cpp"
   cppbessot::odb_sqlite)
 
 cppbessot_add_odb_orm_test(
   "pgsql"
   "pgsql"
-  CPPBESSOT_ODB_TEST_PGSQL_CONNSTR
+  CPPBESSOT_DB_PGSQL_PRODDEV_CONNSTR
   "${CMAKE_CURRENT_SOURCE_DIR}/pgsql_orm_test.cpp"
   cppbessot::odb_pgsql)

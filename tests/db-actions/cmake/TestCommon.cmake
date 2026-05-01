@@ -162,8 +162,8 @@ endfunction()
 
 function(cppbessot_test_has_real_pgsql_support out_var)
   find_program(_psql psql)
-  if(_psql AND DEFINED CPPBESSOT_DB_ACTION_TEST_PGSQL_ADMIN_CONNSTR
-     AND NOT "${CPPBESSOT_DB_ACTION_TEST_PGSQL_ADMIN_CONNSTR}" STREQUAL "")
+  if(_psql AND DEFINED CPPBESSOT_DB_PGSQL_PRODDEV_CONNSTR
+     AND NOT "${CPPBESSOT_DB_PGSQL_PRODDEV_CONNSTR}" STREQUAL "")
     set(${out_var} TRUE PARENT_SCOPE)
   else()
     set(${out_var} FALSE PARENT_SCOPE)
@@ -174,8 +174,14 @@ function(cppbessot_test_require_real_pgsql_support)
   cppbessot_test_has_real_pgsql_support(_has_support)
   if(NOT _has_support)
     message(FATAL_ERROR
-      "Real PostgreSQL db-action test support requires `psql` and CPPBESSOT_DB_ACTION_TEST_PGSQL_ADMIN_CONNSTR.")
+      "Real PostgreSQL db-action test support requires `psql` and CPPBESSOT_DB_PGSQL_PRODDEV_CONNSTR.")
   endif()
+endfunction()
+
+function(cppbessot_test_pgsql_admin_connstr out_var)
+  cppbessot_test_require_var(CPPBESSOT_DB_PGSQL_PRODDEV_CONNSTR)
+  cppbessot_test_pgsql_connstr_replace_dbname(_admin_connstr "${CPPBESSOT_DB_PGSQL_PRODDEV_CONNSTR}" "postgres")
+  set(${out_var} "${_admin_connstr}" PARENT_SCOPE)
 endfunction()
 
 function(cppbessot_test_pgsql_exec connstr sql_text)
@@ -270,23 +276,25 @@ endfunction()
 
 function(cppbessot_test_pgsql_drop_database connstr)
   cppbessot_test_require_real_pgsql_support()
+  cppbessot_test_pgsql_admin_connstr(_admin_connstr)
   cppbessot_test_pgsql_connstr_dbname(_dbname "${connstr}")
   cppbessot_test_pgsql_escape_identifier(_db_ident "${_dbname}")
   cppbessot_test_pgsql_escape_literal(_db_lit "${_dbname}")
   cppbessot_test_pgsql_exec(
-    "${CPPBESSOT_DB_ACTION_TEST_PGSQL_ADMIN_CONNSTR}"
+    "${_admin_connstr}"
     "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = ${_db_lit} AND pid <> pg_backend_pid();")
   cppbessot_test_pgsql_exec(
-    "${CPPBESSOT_DB_ACTION_TEST_PGSQL_ADMIN_CONNSTR}"
+    "${_admin_connstr}"
     "DROP DATABASE IF EXISTS ${_db_ident};")
 endfunction()
 
 function(cppbessot_test_pgsql_create_database connstr)
   cppbessot_test_require_real_pgsql_support()
+  cppbessot_test_pgsql_admin_connstr(_admin_connstr)
   cppbessot_test_pgsql_connstr_dbname(_dbname "${connstr}")
   cppbessot_test_pgsql_escape_identifier(_db_ident "${_dbname}")
   cppbessot_test_pgsql_exec(
-    "${CPPBESSOT_DB_ACTION_TEST_PGSQL_ADMIN_CONNSTR}"
+    "${_admin_connstr}"
     "CREATE DATABASE ${_db_ident};")
 endfunction()
 
@@ -297,13 +305,14 @@ endfunction()
 
 function(cppbessot_test_pgsql_clone_database source_connstr target_connstr)
   cppbessot_test_require_real_pgsql_support()
+  cppbessot_test_pgsql_admin_connstr(_admin_connstr)
   cppbessot_test_pgsql_connstr_dbname(_source_db "${source_connstr}")
   cppbessot_test_pgsql_connstr_dbname(_target_db "${target_connstr}")
   cppbessot_test_pgsql_escape_identifier(_source_ident "${_source_db}")
   cppbessot_test_pgsql_escape_identifier(_target_ident "${_target_db}")
   cppbessot_test_pgsql_drop_database("${target_connstr}")
   cppbessot_test_pgsql_exec(
-    "${CPPBESSOT_DB_ACTION_TEST_PGSQL_ADMIN_CONNSTR}"
+    "${_admin_connstr}"
     "CREATE DATABASE ${_target_ident} TEMPLATE ${_source_ident};")
 endfunction()
 
@@ -314,13 +323,14 @@ endfunction()
 
 function(cppbessot_test_pgsql_clone_command out_var source_connstr target_connstr)
   cppbessot_test_require_real_pgsql_support()
+  cppbessot_test_pgsql_admin_connstr(_admin_connstr)
   cppbessot_test_pgsql_connstr_dbname(_source_db "${source_connstr}")
   cppbessot_test_pgsql_connstr_dbname(_target_db "${target_connstr}")
   cppbessot_test_pgsql_escape_identifier(_source_ident "${_source_db}")
   cppbessot_test_pgsql_escape_identifier(_target_ident "${_target_db}")
   cppbessot_test_pgsql_escape_literal(_source_lit "${_source_db}")
   cppbessot_test_pgsql_escape_literal(_target_lit "${_target_db}")
-  cppbessot_test_shell_single_quote(_admin_shell "${CPPBESSOT_DB_ACTION_TEST_PGSQL_ADMIN_CONNSTR}")
+  cppbessot_test_shell_single_quote(_admin_shell "${_admin_connstr}")
   cppbessot_test_shell_single_quote(
     _term_target_shell
     "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = ${_target_lit} AND pid <> pg_backend_pid();")

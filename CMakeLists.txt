@@ -12,12 +12,22 @@ endif()
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/dbDependencyCheck.cmake")
 cppbessot_check_dependencies()
 
-set(CPPBESSOT_ODB_TEST_SQLITE_CONNSTR "" CACHE STRING
-  "Optional SQLite connection string for ODB runtime tests")
-set(CPPBESSOT_ODB_TEST_PGSQL_CONNSTR "" CACHE STRING
-  "Optional PostgreSQL conninfo string for ODB runtime tests")
-set(CPPBESSOT_DB_ACTION_TEST_PGSQL_ADMIN_CONNSTR "" CACHE STRING
-  "Optional PostgreSQL admin conninfo string for real db-action test database lifecycle operations")
+set(CPPBESSOT_DB_SQLITE_PROD_PATH "" CACHE STRING
+  "Optional SQLite DB path for DB_TARGET=prod")
+set(CPPBESSOT_DB_SQLITE_DEV_PATH "" CACHE STRING
+  "Optional SQLite DB path for DB_TARGET=dev")
+set(CPPBESSOT_DB_SQLITE_PRODDEV_PATH "" CACHE STRING
+  "Optional SQLite DB path for DB_TARGET=proddev")
+set(CPPBESSOT_DB_SQLITE_TESTS_PATH "" CACHE STRING
+  "Optional SQLite DB path for DB_TARGET=tests")
+set(CPPBESSOT_DB_PGSQL_PROD_CONNSTR "" CACHE STRING
+  "Optional PostgreSQL connstr for DB_TARGET=prod")
+set(CPPBESSOT_DB_PGSQL_DEV_CONNSTR "" CACHE STRING
+  "Optional PostgreSQL connstr for DB_TARGET=dev")
+set(CPPBESSOT_DB_PGSQL_PRODDEV_CONNSTR "" CACHE STRING
+  "Optional PostgreSQL connstr for DB_TARGET=proddev")
+set(CPPBESSOT_DB_PGSQL_TESTS_CONNSTR "" CACHE STRING
+  "Optional PostgreSQL connstr for DB_TARGET=tests")
 
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/CppBeSSOT.cmake")
 

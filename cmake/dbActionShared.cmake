@@ -14,7 +14,8 @@ endfunction()
 function(_cppbessot_db_action_validate_db_target_impl db_target)
   if(NOT "${db_target}" STREQUAL "prod"
      AND NOT "${db_target}" STREQUAL "proddev"
-     AND NOT "${db_target}" STREQUAL "dev")
-    message(FATAL_ERROR "DB_TARGET must be one of: prod, proddev, dev.")
+     AND NOT "${db_target}" STREQUAL "dev"
+     AND NOT "${db_target}" STREQUAL "tests")
+    message(FATAL_ERROR "DB_TARGET must be one of: prod, proddev, dev, tests.")
   endif()
 endfunction()

@@ -25,7 +25,7 @@ function(cppbessot_db_action_target_exists out_var backend sqlite_path pgsql_con
   endif()
 endfunction()
 
-function(cppbessot_db_action_get_clone_command out_var backend)
+function(cppbessot_db_action_get_clone_command out_var backend target)
   if("${backend}" STREQUAL "sqlite")
     set(_command "${CPPBESSOT_DB_SQLITE_CLONE_PROD_TO_PRODDEV_COMMAND}")
   else()
@@ -34,11 +34,11 @@ function(cppbessot_db_action_get_clone_command out_var backend)
   set(${out_var} "${_command}" PARENT_SCOPE)
 endfunction()
 
-function(cppbessot_db_action_invoke_clone_hook backend)
-  cppbessot_db_action_get_clone_command(_clone_command "${backend}")
+function(cppbessot_db_action_invoke_clone_hook backend target)
+  cppbessot_db_action_get_clone_command(_clone_command "${backend}" "${target}")
   if("${_clone_command}" STREQUAL "")
     message(FATAL_ERROR
-      "No clone command is configured for backend `${backend}` while preparing proddev.")
+      "No clone command is configured for backend `${backend}` while preparing target `${target}`.")
   endif()
 
   execute_process(
@@ -50,7 +50,7 @@ function(cppbessot_db_action_invoke_clone_hook backend)
 
   if(NOT _result EQUAL 0)
     message(FATAL_ERROR
-      "Proddev clone command failed for backend `${backend}`.\n${_stdout}\n${_stderr}")
+      "Clone command failed for backend `${backend}` target `${target}`.\n${_stdout}\n${_stderr}")
   endif()
 endfunction()
 
@@ -68,7 +68,7 @@ function(cppbessot_db_action_prepare_proddev target backend use_stale sqlite_pat
     return()
   endif()
 
-  cppbessot_db_action_invoke_clone_hook("${backend}")
+  cppbessot_db_action_invoke_clone_hook("${backend}" "${target}")
   cppbessot_db_action_target_exists(_exists "${backend}" "${sqlite_path}" "${pgsql_connstr}")
   if(NOT _exists)
     message(FATAL_ERROR

@@ -54,8 +54,8 @@ void apply_pgsql_ddl(const std::string& connstr)
 TEST(PgsqlOdbOrm, PersistsLoadsQueriesAndErases)
 {
   const std::string connstr = cppbessot_env_or_default(
-    "CPPBESSOT_ODB_TEST_PGSQL_CONNSTR",
-    CPPBESSOT_ODB_TEST_PGSQL_CONNSTR_DEFAULT);
+    "CPPBESSOT_DB_PGSQL_PRODDEV_CONNSTR",
+    CPPBESSOT_DB_PGSQL_PRODDEV_CONNSTR_DEFAULT);
   apply_pgsql_ddl(connstr);
   odb::pgsql::database db(connstr);
   cppbessot_run_agent_orm_roundtrip<odb::pgsql::database, odb::pgsql::transaction>(db);
