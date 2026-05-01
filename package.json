@@ -1,0 +1,8 @@
+{
+  "name": "cppbessot",
+  "private": true,
+  "devDependencies": {
+    "@openapitools/openapi-generator-cli": "^2.30.0",
+    "openapi-zod-client": "^1.18.3"
+  }
+}
