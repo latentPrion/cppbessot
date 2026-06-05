@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
+include("${CMAKE_CURRENT_LIST_DIR}/cppbessotOdbHeaderDiscovery.cmake")
 
 if(NOT DEFINED CPPBESSOT_ODB_EXECUTABLE OR CPPBESSOT_ODB_EXECUTABLE STREQUAL "")
   message(FATAL_ERROR "CPPBESSOT_ODB_EXECUTABLE is required")
@@ -89,22 +90,7 @@ endfunction()
 cppbessot_migration_resolve_backends(_migration_backends)
 
 set(_to_include_dir "${CPPBESSOT_TO_VERSION_DIR}/generated-cpp-source/include")
-file(GLOB _to_headers "${_to_include_dir}/*/model/*.h")
-if(NOT _to_headers)
-  message(FATAL_ERROR "No target-version headers found under ${_to_include_dir}")
-endif()
-
-set(_object_headers "")
-foreach(_header IN LISTS _to_headers)
-  file(READ "${_header}" _header_contents)
-  if(_header_contents MATCHES "#pragma db object")
-    list(APPEND _object_headers "${_header}")
-  endif()
-endforeach()
-
-if(NOT _object_headers)
-  message(FATAL_ERROR "No ODB object headers found under ${_to_include_dir}")
-endif()
+cppbessot_odb_find_object_headers(_object_headers "${_to_include_dir}")
 
 set(_empty_changelog_dir "${CPPBESSOT_MIGRATION_DIR}/.empty-baseline")
 file(MAKE_DIRECTORY "${_empty_changelog_dir}")

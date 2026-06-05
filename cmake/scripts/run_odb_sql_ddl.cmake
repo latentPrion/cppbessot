@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
+include("${CMAKE_CURRENT_LIST_DIR}/cppbessotOdbHeaderDiscovery.cmake")
 
 if(NOT DEFINED CPPBESSOT_ODB_EXECUTABLE OR CPPBESSOT_ODB_EXECUTABLE STREQUAL "")
   message(FATAL_ERROR "CPPBESSOT_ODB_EXECUTABLE is required")
@@ -8,10 +9,7 @@ if(NOT DEFINED CPPBESSOT_VERSION_DIR OR CPPBESSOT_VERSION_DIR STREQUAL "")
 endif()
 
 set(_include_dir "${CPPBESSOT_VERSION_DIR}/generated-cpp-source/include")
-file(GLOB _headers "${_include_dir}/*/model/*.h")
-if(NOT _headers)
-  message(FATAL_ERROR "No model headers found under ${_include_dir}")
-endif()
+cppbessot_odb_find_object_headers(_object_headers "${_include_dir}")
 
 foreach(_backend IN ITEMS sqlite pgsql)
   if(_backend STREQUAL "sqlite")
@@ -28,7 +26,7 @@ foreach(_backend IN ITEMS sqlite pgsql)
   execute_process(
     COMMAND "${CPPBESSOT_ODB_EXECUTABLE}" -I "${_include_dir}" --std c++11 -d "${_backend}"
             --generate-schema --schema-format sql -q
-            -o "${_ddl_dir}" --changelog-dir "${_changelog_dir}" ${_headers}
+            -o "${_ddl_dir}" --changelog-dir "${_changelog_dir}" ${_object_headers}
     RESULT_VARIABLE _result
     OUTPUT_VARIABLE _stdout
     ERROR_VARIABLE _stderr

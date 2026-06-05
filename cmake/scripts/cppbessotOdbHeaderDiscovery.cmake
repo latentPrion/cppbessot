@@ -1,0 +1,20 @@
+function(cppbessot_odb_find_object_headers out_var include_dir)
+  file(GLOB _headers "${include_dir}/*/model/*.h")
+  if(NOT _headers)
+    message(FATAL_ERROR "No model headers found under ${include_dir}")
+  endif()
+
+  set(_object_headers "")
+  foreach(_header IN LISTS _headers)
+    file(READ "${_header}" _header_contents)
+    if(_header_contents MATCHES "#pragma db object")
+      list(APPEND _object_headers "${_header}")
+    endif()
+  endforeach()
+
+  if(NOT _object_headers)
+    message(FATAL_ERROR "No ODB object headers found under ${include_dir}")
+  endif()
+
+  set(${out_var} "${_object_headers}" PARENT_SCOPE)
+endfunction()
