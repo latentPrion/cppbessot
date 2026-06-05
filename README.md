@@ -135,6 +135,13 @@ cppbessot_enable()
   - default: empty
   - target schema basename for `db_gen_migrations`
 
+- `CPPBESSOT_GEN_MIGRATION_BACKENDS`
+  - default: `sqlite;pgsql`
+  - ODB backends for `db_gen_migrations`
+  - supported values: `sqlite`, `pgsql`
+  - `pgsql` writes artifacts under the historical `postgre` output directory
+  - compatibility alias: `CPPBESSOT_GEN_MIGRATIONS_BACKENDS`
+
 - `DB_SCHEMA_CHANGES_ARE_ERROR`
   - default: `OFF`
   - used by schema-drift checking logic
@@ -303,6 +310,7 @@ Primary variables:
 - `CPPBESSOT_WORKDIR`
 - `DB_SCHEMA_DIR_MIGRATION_FROM`
 - `DB_SCHEMA_DIR_MIGRATION_TO`
+- `CPPBESSOT_GEN_MIGRATION_BACKENDS`
 
 Output:
 
@@ -313,6 +321,11 @@ Notes:
 
 - `from` and `to` must differ
 - if either migration variable is empty, `db_gen_migrations` is still registered but intentionally fails with guidance
+- enum-only generated C++ headers are skipped; only headers with ODB object pragmas produce migration SQL
+- missing source-version changelog XML means the target-version model is treated as a new table and generated from an empty changelog baseline
+- PostgreSQL migrations remain incremental when source-version changelog XML exists
+- SQLite migrations remain incremental except when ODB reports SQLite's drop-column limitation; in that case only that model is regenerated from the empty changelog baseline with a warning
+- for production upgrades, PostgreSQL migration SQL is the meaningful upgrade path; SQLite greenfield fallback artifacts are generated for tree completeness, not as a guaranteed runnable SQLite upgrade path
 
 ### `db_gen_orm_serdes_and_zod`
 

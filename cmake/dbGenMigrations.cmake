@@ -9,6 +9,7 @@ function(cppbessot_add_db_gen_migrations_target from_schema_dir to_schema_dir)
   #   - from_schema_dir: Source schema directory basename.
   #   - to_schema_dir: Target schema directory basename.
   #   - CPPBESSOT_ODB_EXECUTABLE: Path to `odb` compiler.
+  #   - CPPBESSOT_GEN_MIGRATION_BACKENDS: List of ODB backends to generate.
   # Outputs:
   #   - CMake target: `db_gen_migrations` (EXCLUDE_FROM_ALL).
   #   - Files under `migrations/<from>-<to>/{sqlite,postgre}`.
@@ -26,10 +27,11 @@ function(cppbessot_add_db_gen_migrations_target from_schema_dir to_schema_dir)
 
   add_custom_target(db_gen_migrations
     COMMAND "${CMAKE_COMMAND}"
-            -DCPPBESSOT_ODB_EXECUTABLE=${CPPBESSOT_ODB_EXECUTABLE}
-            -DCPPBESSOT_FROM_VERSION_DIR=${_from_dir}
-            -DCPPBESSOT_TO_VERSION_DIR=${_to_dir}
-            -DCPPBESSOT_MIGRATION_DIR=${_migration_dir}
+            "-DCPPBESSOT_ODB_EXECUTABLE=${CPPBESSOT_ODB_EXECUTABLE}"
+            "-DCPPBESSOT_FROM_VERSION_DIR=${_from_dir}"
+            "-DCPPBESSOT_TO_VERSION_DIR=${_to_dir}"
+            "-DCPPBESSOT_MIGRATION_DIR=${_migration_dir}"
+            "-DCPPBESSOT_GEN_MIGRATION_BACKENDS=${CPPBESSOT_GEN_MIGRATION_BACKENDS}"
             -P "${_CPPBESSOT_DB_GEN_MIGRATIONS_DIR}/scripts/run_odb_migrations.cmake"
     COMMENT "Generating DB migrations: ${from_schema_dir} -> ${to_schema_dir}"
     VERBATIM

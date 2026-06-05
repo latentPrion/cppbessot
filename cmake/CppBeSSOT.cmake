@@ -31,6 +31,19 @@ if(NOT DEFINED DB_SCHEMA_DIR_MIGRATION_TO)
     "Optional target schema directory basename for migration generation")
 endif()
 
+if(NOT DEFINED CPPBESSOT_GEN_MIGRATION_BACKENDS)
+  if(DEFINED CPPBESSOT_GEN_MIGRATIONS_BACKENDS)
+    set(CPPBESSOT_GEN_MIGRATION_BACKENDS "${CPPBESSOT_GEN_MIGRATIONS_BACKENDS}")
+  else()
+    set(CPPBESSOT_GEN_MIGRATION_BACKENDS "sqlite;pgsql")
+  endif()
+endif()
+
+set(CPPBESSOT_GEN_MIGRATION_BACKENDS "${CPPBESSOT_GEN_MIGRATION_BACKENDS}" CACHE STRING
+  "ODB backends for db_gen_migrations; supported values: sqlite, pgsql")
+set(CPPBESSOT_GEN_MIGRATIONS_BACKENDS "${CPPBESSOT_GEN_MIGRATION_BACKENDS}" CACHE STRING
+  "Compatibility alias for CPPBESSOT_GEN_MIGRATION_BACKENDS" FORCE)
+
 if(NOT DEFINED DB_SCHEMA_CHANGES_ARE_ERROR)
   option(DB_SCHEMA_CHANGES_ARE_ERROR "Treat dirty schema changes as hard CMake error" OFF)
 endif()
@@ -249,6 +262,7 @@ function(cppbessot_enable)
   #   - DB_SCHEMA_DIR_TO_GENERATE
   #   - DB_SCHEMA_DIR_MIGRATION_FROM
   #   - DB_SCHEMA_DIR_MIGRATION_TO
+  #   - CPPBESSOT_GEN_MIGRATION_BACKENDS
   #   - DB_SCHEMA_CHANGES_ARE_ERROR (optional behavior control)
   # Outputs:
   #   - Custom targets:

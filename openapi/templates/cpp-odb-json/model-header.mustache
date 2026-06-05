@@ -13,6 +13,12 @@
 #include <nlohmann/json.hpp>
 #include <odb/core.hxx>
 
+{{#vars}}
+{{#vendorExtensions.x-cppType}}
+#include <cppbessot/model/{{vendorExtensions.x-cppType}}.h>
+{{/vendorExtensions.x-cppType}}
+{{/vars}}
+
 namespace models {
 
 {{#isEnum}}
@@ -41,7 +47,7 @@ public:
 {{#vendorExtensions.x-odbAddedIn}}
   // odbAddedIn: {{.}}
 {{/vendorExtensions.x-odbAddedIn}}
-  {{#isString}}std::string{{/isString}}{{^isString}}{{#isDateTime}}std::string{{/isDateTime}}{{^isDateTime}}{{dataType}}{{/isDateTime}}{{/isString}} {{nameInCamelCase}}{};
+  {{#vendorExtensions.x-cppType}}{{vendorExtensions.x-cppType}}{{/vendorExtensions.x-cppType}}{{^vendorExtensions.x-cppType}}{{#isString}}std::string{{/isString}}{{^isString}}{{#isDateTime}}std::string{{/isDateTime}}{{^isDateTime}}{{#isBoolean}}bool{{/isBoolean}}{{^isBoolean}}{{#isInteger}}int32_t{{/isInteger}}{{^isInteger}}{{#isLong}}int64_t{{/isLong}}{{^isLong}}{{dataType}}{{/isLong}}{{/isInteger}}{{/isBoolean}}{{/isDateTime}}{{/isString}}{{/vendorExtensions.x-cppType}} {{nameInCamelCase}}{};
 {{/vars}}
 
   NLOHMANN_DEFINE_TYPE_INTRUSIVE({{classname}}{{#vars}}, {{nameInCamelCase}}{{/vars}})
