@@ -13,16 +13,26 @@ function(cppbessot_add_db_gen_odb_target schema_dir)
   #   - Files under `<schema_dir>/generated-odb-source/{sqlite,postgre}`.
   cppbessot_validate_schema_dir_name("${schema_dir}")
   cppbessot_get_schema_dir_path(_version_dir "${schema_dir}")
+  cppbessot_get_expected_odb_generation_artifacts(
+    _expected_odb_model_headers
+    _expected_odb_sources
+    "${schema_dir}")
+  _cppbessot_get_openapi_file_path(_openapi_file "${schema_dir}")
 
-  add_custom_target(db_gen_odb_logic
+  add_custom_command(
+    OUTPUT ${_expected_odb_sources}
     COMMAND "${CMAKE_COMMAND}"
             -DCPPBESSOT_ODB_EXECUTABLE=${CPPBESSOT_ODB_EXECUTABLE}
             -DCPPBESSOT_VERSION_DIR=${_version_dir}
             -P "${_CPPBESSOT_DB_GEN_ODB_DIR}/scripts/run_odb_logic.cmake"
-    DEPENDS db_gen_cpp_headers
+    DEPENDS "${_openapi_file}" ${_expected_odb_model_headers}
     COMMENT "Generating ODB ORM sources for ${schema_dir} (sqlite + postgre)"
     VERBATIM
   )
+
+  add_custom_target(db_gen_odb_logic
+    DEPENDS ${_expected_odb_sources})
+  add_dependencies(db_gen_odb_logic db_gen_cpp_headers)
 
   set_target_properties(db_gen_odb_logic PROPERTIES EXCLUDE_FROM_ALL TRUE)
 endfunction()
