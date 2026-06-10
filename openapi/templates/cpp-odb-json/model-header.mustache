@@ -49,6 +49,9 @@ public:
 {{/vendorExtensions.x-odbAddedIn}}
   {{#vendorExtensions.x-cppType}}{{vendorExtensions.x-cppType}}{{/vendorExtensions.x-cppType}}{{^vendorExtensions.x-cppType}}{{#isString}}std::string{{/isString}}{{^isString}}{{#isDateTime}}std::string{{/isDateTime}}{{^isDateTime}}{{#isBoolean}}bool{{/isBoolean}}{{^isBoolean}}{{#isInteger}}int32_t{{/isInteger}}{{^isInteger}}{{#isLong}}int64_t{{/isLong}}{{^isLong}}{{dataType}}{{/isLong}}{{/isInteger}}{{/isBoolean}}{{/isDateTime}}{{/isString}}{{/vendorExtensions.x-cppType}} {{nameInCamelCase}}{};
 {{/vars}}
+{{#vendorExtensions.x-dataModelUniqueConstraints}}
+  #pragma db index("{{name}}") unique {{odbMemberSpec}}
+{{/vendorExtensions.x-dataModelUniqueConstraints}}
 
   NLOHMANN_DEFINE_TYPE_INTRUSIVE({{classname}}{{#vars}}, {{nameInCamelCase}}{{/vars}})
 
