@@ -13,16 +13,30 @@ function(cppbessot_add_db_gen_sql_ddl_target schema_dir)
   #   - Files under `<schema_dir>/generated-sql-ddl/{sqlite,postgre}`.
   cppbessot_validate_schema_dir_name("${schema_dir}")
   cppbessot_get_schema_dir_path(_version_dir "${schema_dir}")
+  cppbessot_get_expected_odb_generation_artifacts(
+    _expected_model_headers
+    _expected_odb_sources
+    "${schema_dir}")
 
-  add_custom_target(db_gen_sql_ddl
+  set(_stamp_dir "${CMAKE_CURRENT_BINARY_DIR}/cppbessot/${schema_dir}")
+  set(_stamp_file "${_stamp_dir}/db_gen_sql_ddl.stamp")
+
+  add_custom_command(
+    OUTPUT "${_stamp_file}"
+    COMMAND "${CMAKE_COMMAND}" -E make_directory "${_stamp_dir}"
     COMMAND "${CMAKE_COMMAND}"
             -DCPPBESSOT_ODB_EXECUTABLE=${CPPBESSOT_ODB_EXECUTABLE}
             -DCPPBESSOT_VERSION_DIR=${_version_dir}
             -P "${_CPPBESSOT_DB_GEN_SQL_DDL_DIR}/scripts/run_odb_sql_ddl.cmake"
-    DEPENDS db_gen_cpp_headers
+    COMMAND "${CMAKE_COMMAND}" -E touch "${_stamp_file}"
+    DEPENDS db_gen_cpp_headers ${_expected_model_headers}
     COMMENT "Generating SQL DDL snapshots for ${schema_dir} (sqlite + postgre)"
     VERBATIM
   )
+
+  add_custom_target(db_gen_sql_ddl
+    DEPENDS "${_stamp_file}")
+  add_dependencies(db_gen_sql_ddl db_gen_cpp_headers)
 
   set_target_properties(db_gen_sql_ddl PROPERTIES EXCLUDE_FROM_ALL TRUE)
 endfunction()

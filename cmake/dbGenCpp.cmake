@@ -24,8 +24,13 @@ function(cppbessot_add_db_gen_cpp_target schema_dir)
   set(_template_config "${_template_dir}/config.yaml")
   set(_output_dir "${_version_dir}/generated-cpp-source")
   file(GLOB_RECURSE _template_inputs CONFIGURE_DEPENDS "${_template_dir}/*")
+  cppbessot_get_expected_cpp_model_outputs(
+    _expected_model_headers
+    _expected_model_sources
+    "${schema_dir}")
 
-  add_custom_target(db_gen_cpp_headers
+  add_custom_command(
+    OUTPUT ${_expected_model_headers} ${_expected_model_sources}
     COMMAND ${CMAKE_COMMAND} -E make_directory "${_output_dir}"
     COMMAND "${CPPBESSOT_NPX_EXECUTABLE}" @openapitools/openapi-generator-cli generate
             -i "${_openapi_file}"
@@ -38,6 +43,9 @@ function(cppbessot_add_db_gen_cpp_target schema_dir)
     COMMENT "Generating C++ model headers/sources for ${schema_dir}"
     VERBATIM
   )
+
+  add_custom_target(db_gen_cpp_headers
+    DEPENDS ${_expected_model_headers} ${_expected_model_sources})
 
   set_target_properties(db_gen_cpp_headers PROPERTIES EXCLUDE_FROM_ALL TRUE)
 endfunction()
