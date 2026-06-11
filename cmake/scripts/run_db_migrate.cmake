@@ -29,7 +29,7 @@ cppbessot_db_action_prepare_proddev(
 cppbessot_db_action_backend_subdir(_backend_subdir "${_backend}")
 cppbessot_db_action_get_migration_dir_path(_migration_dir "${DB_MIGRATE_WITH}")
 set(_sql_dir "${_migration_dir}/${_backend_subdir}")
-cppbessot_db_action_collect_nonempty_sql_files(_sql_files "${_sql_dir}")
+cppbessot_db_action_collect_migration_sql_files(_sql_files "${_sql_dir}")
 cppbessot_db_action_get_hook_path(_pre_hook "${_migration_dir}" "pre-structural-backfill.sh")
 cppbessot_db_action_get_hook_path(_post_hook "${_migration_dir}" "post-structural-backfill.sh")
 

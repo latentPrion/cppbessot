@@ -26,7 +26,7 @@ set(_ddl_dir "${_schema_dir}/generated-sql-ddl/${_backend_subdir}")
 cppbessot_db_action_require_nonempty_sql_dir(
   "${_ddl_dir}"
   "db_createfrom cannot continue")
-cppbessot_db_action_collect_nonempty_sql_files(_sql_files "${_ddl_dir}")
+cppbessot_db_action_collect_schema_sql_files(_sql_files "${_ddl_dir}")
 
 if("${_backend}" STREQUAL "sqlite")
   cppbessot_db_action_reset_sqlite_db("${_sqlite_path}")
