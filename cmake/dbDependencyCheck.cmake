@@ -56,9 +56,10 @@ function(_cppbessot_require_npm_package npm_executable package_name)
   #   - package_name: Package name to validate.
   # Outputs:
   #   - No return value; raises FATAL_ERROR when package is not installed.
+  cppbessot_get_module_root(_module_root)
   execute_process(
     COMMAND "${npm_executable}" list --depth=0 "${package_name}"
-    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+    WORKING_DIRECTORY "${_module_root}"
     RESULT_VARIABLE _local_result
     OUTPUT_QUIET
     ERROR_QUIET
@@ -90,9 +91,10 @@ function(_cppbessot_require_npx_package_executable npx_executable package_execut
   #   - package_executable: Executable name exposed by a package.
   # Outputs:
   #   - No return value; raises FATAL_ERROR if execution fails.
+  cppbessot_get_module_root(_module_root)
   execute_process(
     COMMAND "${npx_executable}" --no-install "${package_executable}" --help
-    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+    WORKING_DIRECTORY "${_module_root}"
     RESULT_VARIABLE _help_result
     OUTPUT_QUIET
     ERROR_VARIABLE _help_stderr
@@ -105,7 +107,7 @@ function(_cppbessot_require_npx_package_executable npx_executable package_execut
   # Some CLIs return non-zero for --help; verify with version as fallback.
   execute_process(
     COMMAND "${npx_executable}" --no-install "${package_executable}" version
-    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+    WORKING_DIRECTORY "${_module_root}"
     RESULT_VARIABLE _version_result
     OUTPUT_QUIET
     ERROR_VARIABLE _version_stderr

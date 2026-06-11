@@ -41,6 +41,20 @@ function(cppbessot_initialize_paths)
   set(CPPBESSOT_WORKDIR_ABS "${CPPBESSOT_WORKDIR_ABS}" PARENT_SCOPE)
 endfunction()
 
+function(cppbessot_get_module_root out_var)
+  # Purpose: Resolve the CppBeSSOT module root, respecting parent overrides.
+  # Inputs:
+  #   - CPPBESSOT_MODULE_ROOT (optional): Parent-provided module root path.
+  # Outputs:
+  #   - <out_var> (PARENT_SCOPE): Absolute module root path.
+  if(DEFINED CPPBESSOT_MODULE_ROOT AND NOT "${CPPBESSOT_MODULE_ROOT}" STREQUAL "")
+    get_filename_component(_module_root "${CPPBESSOT_MODULE_ROOT}" ABSOLUTE)
+  else()
+    get_filename_component(_module_root "${_CPPBESSOT_GENERATION_COMMON_DIR}/.." ABSOLUTE)
+  endif()
+  set(${out_var} "${_module_root}" PARENT_SCOPE)
+endfunction()
+
 function(cppbessot_require_var var_name)
   # Purpose: Fail fast if a required CMake variable is missing/empty.
   # Inputs:

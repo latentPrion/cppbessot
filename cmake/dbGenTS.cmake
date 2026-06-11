@@ -12,6 +12,7 @@ function(cppbessot_add_db_gen_ts_target schema_dir)
   #   - Files under `<schema_dir>/generated-ts-types`.
   cppbessot_validate_schema_dir_name("${schema_dir}")
   cppbessot_get_schema_dir_path(_version_dir "${schema_dir}")
+  cppbessot_get_module_root(_module_root)
 
   set(_openapi_file "${_version_dir}/openapi/openapi.yaml")
   set(_output_dir "${_version_dir}/generated-ts-types")
@@ -22,6 +23,7 @@ function(cppbessot_add_db_gen_ts_target schema_dir)
             -i "${_openapi_file}"
             -g typescript-fetch
             -o "${_output_dir}"
+    WORKING_DIRECTORY "${_module_root}"
     COMMENT "Generating TypeScript types for ${schema_dir}"
     VERBATIM
   )
