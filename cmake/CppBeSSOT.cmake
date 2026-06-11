@@ -12,6 +12,7 @@ include("${CMAKE_CURRENT_LIST_DIR}/dbGenMigrations.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/dbActionCommon.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/dbActionCreateFrom.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/dbActionMigrate.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/dbRuntimeEnv.cmake")
 
 if(NOT DEFINED CPPBESSOT_WORKDIR)
   set(CPPBESSOT_WORKDIR "db" CACHE STRING "CppBeSSOT schema root folder")
@@ -86,6 +87,8 @@ set(CPPBESSOT_DB_SQLITE_CLONE_PROD_TO_PRODDEV_COMMAND "${CPPBESSOT_DB_SQLITE_CLO
   "Parent-supplied command string that clones the prod SQLite DB into proddev")
 set(CPPBESSOT_DB_PGSQL_CLONE_PROD_TO_PRODDEV_COMMAND "${CPPBESSOT_DB_PGSQL_CLONE_PROD_TO_PRODDEV_COMMAND}" CACHE STRING
   "Parent-supplied command string that clones the prod PostgreSQL DB into proddev")
+
+cppbessot_write_runtime_env_file("${CMAKE_BINARY_DIR}/cppbessot.env")
 
 if(NOT DEFINED CPPBESSOT_AUTO_ENABLE)
   option(CPPBESSOT_AUTO_ENABLE "Auto-register CppBeSSOT targets when this file is included" ON)
